@@ -29,47 +29,21 @@ export const LocaleProvider: React.FC<{
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [pendingLocale, setPendingLocale] = useState<string | null>(null)
   
-  // 初始化缓存
+  // 初始化缓存 - 不再预加载本地 JSON 文件
   useEffect(() => {
     if (initialTranslations) {
       translationsCache[initialLocale] = initialTranslations
     }
     setMounted(true)
     
-    // 预加载所有语言的翻译
-    const preloadTranslations = async () => {
-      const localeCodes = availableLocales.map(loc => loc.code)
-      
-      for (const localeCode of localeCodes) {
-        if (localeCode !== initialLocale && !translationsCache[localeCode]) {
-          try {
-            // 从静态 JSON 文件加载翻译
-            const response = await fetch(`/locales/${localeCode}.json`)
-            if (response.ok) {
-              const data = await response.json()
-              translationsCache[localeCode] = data
-              console.log(`Successfully preloaded translations for ${localeCode}`)
-            } else {
-              console.warn(`Failed to preload translations for ${localeCode}: ${response.status} ${response.statusText}`)
-              // 使用空对象作为后备
-              translationsCache[localeCode] = {}
-            }
-          } catch (error) {
-            console.error(`Error preloading translations for ${localeCode}:`, error)
-            // 使用空对象作为后备
-            translationsCache[localeCode] = {}
-          }
-        }
-      }
-    }
-    
-    preloadTranslations()
-  }, [initialLocale, initialTranslations, availableLocales])
+    // 不再预加载本地 JSON 文件
+    // 所有翻译数据将从 Strapi 获取
+  }, [initialLocale, initialTranslations])
   
   // 翻译函数
   const t = (key: string, fallback = '') => {
     if (!translations) return fallback || key
-    return translations[locale]?.[key] || fallback || key
+    return translations[key] || fallback || key
   }
   
   // 设置语言并处理路由变化
@@ -91,42 +65,19 @@ export const LocaleProvider: React.FC<{
     
     setIsLoading(true)
     
-    // 设置 cookie
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`
-    
-    // 如果已经预加载了翻译，直接使用
-    if (translationsCache[newLocale]) {
-      setTranslations(translationsCache[newLocale])
-    } else {
-      // 否则尝试加载翻译
-      fetch(`/locales/${newLocale}.json`)
-        .then(response => {
-          if (!response.ok) {
-            console.warn(`Failed to load translations for ${newLocale}: ${response.status} ${response.statusText}`)
-            return {}
-          }
-          return response.json()
-        })
-        .then(data => {
-          translationsCache[newLocale] = data
-          setTranslations(data)
-        })
-        .catch(error => {
-          console.error(`Failed to load translations for ${newLocale}:`, error)
-          // 使用空对象作为后备
-          translationsCache[newLocale] = {}
-          setTranslations({})
-        })
-    }
-    
     // 更新状态
     setLocaleState(newLocale)
     
-    // 获取当前路径
-    const currentPath = pathname || '/'
+    // 保存用户偏好
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferredLocale', newLocale)
+    }
     
-    // 提取路径部分（去除语言前缀）
+    // 获取当前路径，不包括语言前缀
+    let currentPath = pathname || '/'
     let pathWithoutLocale = currentPath
+    
+    // 检查当前路径是否以语言代码开头
     const localePattern = /^\/[a-z]{2}(\/|$)/
     
     if (localePattern.test(currentPath)) {
@@ -176,11 +127,11 @@ export const LocaleProvider: React.FC<{
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                     <h3 className="text-lg font-medium leading-6 text-gray-900">
-                      {t('language.switch.title')}
+                      {t('language.switch.title', '切换语言')}
                     </h3>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        {t('language.switch.message')}
+                        {t('language.switch.message', '您确定要切换语言吗？页面将会重新加载。')}
                       </p>
                     </div>
                   </div>
@@ -192,14 +143,14 @@ export const LocaleProvider: React.FC<{
                   className="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
                   onClick={() => continueLanguageSwitch(pendingLocale || locale)}
                 >
-                  {t('language.switch.confirm')}
+                  {t('language.switch.confirm', '确认')}
                 </button>
                 <button
                   type="button"
                   className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
                   onClick={() => setIsDialogOpen(false)}
                 >
-                  {t('language.switch.cancel')}
+                  {t('language.switch.cancel', '取消')}
                 </button>
               </div>
             </div>

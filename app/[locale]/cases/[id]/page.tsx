@@ -44,4 +44,6 @@ export async function generateStaticParams() {
     locale: locale.code,
     id: 'placeholder'
   }));
-} 
+}
+
+export const revalidate = 3600; // 每小时重新验证一次 

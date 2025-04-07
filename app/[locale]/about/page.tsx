@@ -13,7 +13,7 @@ export default async function AboutPage({ params }: any) {
       <div className="max-w-4xl mx-auto">
         <div className="prose prose-lg mx-auto">
           {aboutData ? (
-            <div dangerouslySetInnerHTML={{ __html: aboutData.content }} />
+            <div dangerouslySetInnerHTML={{ __html: aboutData.content || '' }} />
           ) : (
             <p>{params.locale === 'en' ? 'Content is being prepared...' : '内容正在准备中...'}</p>
           )}
@@ -26,4 +26,6 @@ export default async function AboutPage({ params }: any) {
 export async function generateStaticParams() {
   const locales = await fetchSupportedLocales();
   return locales.map(locale => ({ locale: locale.code }));
-} 
+}
+
+export const revalidate = 3600; // 每小时重新验证一次 

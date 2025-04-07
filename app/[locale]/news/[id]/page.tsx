@@ -27,7 +27,7 @@ export default async function NewsDetailPage({ params }: any) {
             )}
             
             <div className="prose prose-lg max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: newsItem.content }} />
+              <div dangerouslySetInnerHTML={{ __html: newsItem.content || '' }} />
             </div>
           </>
         ) : (
@@ -49,4 +49,6 @@ export async function generateStaticParams() {
     locale: locale.code,
     id: 'placeholder' // 这个值会被忽略，但需要提供一个占位符
   }));
-} 
+}
+
+export const revalidate = 3600; // 每小时重新验证一次 

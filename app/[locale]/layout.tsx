@@ -32,7 +32,7 @@ export default async function LocaleLayout({
     // 获取当前语言
     const locale = params.locale;
     
-    // 获取全局信息
+    // 获取全局信息，包括翻译数据
     let globalInfo;
     try {
       globalInfo = await fetchGlobalInfo(locale);

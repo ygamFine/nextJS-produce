@@ -10,14 +10,8 @@ export function LanguageSwitcher() {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLocale = e.target.value
     
-    // 使用专用函数切换语言
-    if (typeof window !== 'undefined') {
-      const availableLocaleCodes = availableLocales.map(loc => loc.code)
-      switchLanguage(locale, newLocale, pathname || '/', availableLocaleCodes)
-    } else {
-      // 如果在服务器端，使用常规方法
-      setLocale(newLocale)
-    }
+    // 使用 setLocale 函数切换语言
+    setLocale(newLocale)
   }
   
   return (

@@ -18,9 +18,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
 // 静态生成所有语言版本
 export async function generateStaticParams() {
   const locales = await fetchSupportedLocales();
-  return locales.map(locale => ({
-    locale: locale.code
-  }));
+  return locales.map(locale => ({ locale: locale.code }));
 }
 
 // 服务器组件
