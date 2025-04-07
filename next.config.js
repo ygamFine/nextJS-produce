@@ -12,8 +12,9 @@ const nextConfig = {
     ],
   },
   experimental: {
-    isrMemoryCacheSize: 50,
-  },
+    // 移除不支持的选项
+    // isrMemoryCacheSize: 50,
+  }
 }
 
 module.exports = nextConfig 

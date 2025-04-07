@@ -22,7 +22,7 @@ export async function generateStaticParams() {
 }
 
 // 服务器组件
-export default async function HomePage({ params }: { params: { locale: string } }) {
+export default async function HomePage({ params }: any ) {
   const { locale } = params;
   
   // 获取完整的首页数据，包括 banners 和 about 部分

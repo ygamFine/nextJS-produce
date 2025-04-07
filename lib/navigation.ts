@@ -1,48 +1,41 @@
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context';
+import { useRouter } from 'next/navigation';
+
+type Router = ReturnType<typeof useRouter>;
 
 /**
  * 预取多个路由
  */
-export function prefetchRoutes(
-  routes: string[],
-  locale: string,
-  router: AppRouterInstance
-) {
+export function prefetchRoutes(router: Router, routes: string[]) {
+  if (!router || !routes.length) return;
+  
   routes.forEach(route => {
-    // 确保路由以 / 开头
-    const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
-    
-    // 添加语言前缀（如果需要）
-    const localizedRoute = normalizedRoute.startsWith(`/${locale}`)
-      ? normalizedRoute
-      : `/${locale}${normalizedRoute}`;
-    
-    // 预取路由
     try {
-      router.prefetch(localizedRoute);
-      console.log(`Prefetched: ${localizedRoute}`);
+      router.prefetch(route);
     } catch (error) {
-      console.error(`Failed to prefetch ${localizedRoute}:`, error);
+      console.error(`Failed to prefetch route: ${route}`, error);
     }
   });
 }
 
 /**
- * 优化的导航函数，使用客户端导航而不是服务器请求
+ * 导航到指定路由
  */
-export function navigateTo(
-  route: string,
-  locale: string,
-  router: AppRouterInstance
-) {
-  // 确保路由以 / 开头
-  const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
+export function navigateTo(href: string, locale: string, router: Router) {
+  if (!href || !router) return;
   
-  // 添加语言前缀（如果需要）
-  const localizedRoute = normalizedRoute.startsWith(`/${locale}`)
-    ? normalizedRoute
-    : `/${locale}${normalizedRoute}`;
+  // 处理外部链接
+  if (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) {
+    window.open(href, '_blank');
+    return;
+  }
   
-  // 使用 router.push 进行客户端导航
-  router.push(localizedRoute);
+  // 确保路径以斜杠开头
+  let path = href.startsWith('/') ? href : `/${href}`;
+  
+  // 添加语言前缀
+  if (!path.startsWith(`/${locale}`)) {
+    path = `/${locale}${path}`;
+  }
+  
+  router.push(path);
 } 
