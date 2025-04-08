@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { fetchHomePageData, fetchGlobalInfo, fetchSupportedLocales, fetchProducts } from '@/lib/api'
 import { BannerCarouselClient } from '@/components/BannerCarouselClient'
+import { OptimizedImage } from '@/components/OptimizedImage'
 
 // 生成元数据
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -56,9 +57,10 @@ export default async function HomePage({ params }: any ) {
                 >
                   <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
                     <div className="relative h-64 overflow-hidden">
-                      <img 
+                      <OptimizedImage 
                         src={product.image} 
                         alt={product.name} 
+                        fill
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                       />
                     </div>
@@ -108,9 +110,11 @@ export default async function HomePage({ params }: any ) {
                 </Link>
               </div>
               <div>
-                <img 
+                <OptimizedImage 
                   src={about.image} 
                   alt={about.title} 
+                  width={600}
+                  height={400}
                   className="w-full h-auto rounded-lg shadow-md"
                 />
               </div>

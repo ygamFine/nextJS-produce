@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { fetchProductById, fetchProducts, fetchSupportedLocales } from '@/lib/api';
 import { commonRevalidate } from '@/lib/pageWrapper';
+import { OptimizedImage } from '@/components/OptimizedImage';
 
 // 生成元数据
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -65,9 +66,12 @@ export default async function ProductDetailPage({ params }: any) {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
-              <img 
+              <OptimizedImage 
                 src={product.image} 
                 alt={product.name} 
+                width={600}
+                height={400}
+                priority
                 className="w-full h-auto rounded-lg shadow-md"
               />
             </div>

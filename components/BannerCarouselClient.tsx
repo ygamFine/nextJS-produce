@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { OptimizedImage } from './OptimizedImage';
 
 interface Banner {
   id: string;
@@ -54,10 +55,13 @@ export function BannerCarouselClient({ banners, locale }: BannerCarouselProps) {
               index === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
           >
-            <img 
+            <OptimizedImage 
               src={banner.image} 
               alt={banner.title} 
-              className="w-full h-full object-cover"
+              fill
+              priority={index === 0} // 首图优先加载
+              sizes="100vw"
+              className="w-full h-full"
             />
             
             {/* 内容覆盖层 */}

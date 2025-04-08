@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { OptimizedImage } from './OptimizedImage';
 
 interface Product {
   id: string;
@@ -128,10 +129,11 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
             >
               <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
                 <div className="relative h-64 overflow-hidden">
-                  <img 
+                  <OptimizedImage 
                     src={product.image} 
                     alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                    fill
+                    className="w-full h-full group-hover:scale-105 transition duration-300"
                   />
                 </div>
                 <div className="p-6">
