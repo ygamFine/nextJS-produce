@@ -114,6 +114,7 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
 export async function fetchProducts(locale = 'zh') {
   try {
     const options = getApiOptions();
+    console.log('Products URL:', `${STRAPI_URL}/products?populate=*&locale=${locale}`)
     const response = await fetch(`${STRAPI_URL}/products?populate=*&locale=${locale}`, options);
     
     if (!response.ok) {
@@ -121,17 +122,18 @@ export async function fetchProducts(locale = 'zh') {
     }
     
     const data = await response.json();
+    console.log('Products data:', data)
     
     // 转换 Strapi 响应格式为应用所需格式
     return data.data?.map((item: any) => ({
-      id: item.id,
-      name: item.attributes.name,
-      description: item.attributes.description,
-      price: item.attributes.price,
-      image: item.attributes.image?.data?.attributes?.url 
-        ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
+      id: item.documentId,
+      name: item.name,
+      description: item.decs,
+      price: item.price || 0,
+      image: item.image?.url 
+        ? `${STRAPI_URL_IMG}${item.image?.url}`
         : '/placeholder.jpg',
-      category: item.attributes.category
+      category: item.category
     })) || [];
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -143,6 +145,7 @@ export async function fetchProducts(locale = 'zh') {
 export async function fetchProductById(id: string, locale = 'zh') {
   try {
     const options = getApiOptions();
+    console.log('Products ByID URL:', `${STRAPI_URL}/products/${id}?populate=*&locale=${locale}`)
     const response = await fetch(`${STRAPI_URL}/products/${id}?populate=*&locale=${locale}`, options);
     
     if (!response.ok) {
@@ -150,17 +153,18 @@ export async function fetchProductById(id: string, locale = 'zh') {
     }
     
     const data = await response.json();
+    console.log('Products ByID data:', data)
     
     const item = data.data;
     return {
       id: item.id,
-      name: item.attributes.name,
-      description: item.attributes.description,
-      price: item.attributes.price,
-      image: item.attributes.image?.data?.attributes?.url 
-        ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
+      name: item.name,
+      description: item.decs,
+      price: item.price,
+      image: item.image?.url 
+        ? `${STRAPI_URL_IMG}${item.image?.url}`
         : '/placeholder.jpg',
-      category: item.attributes.category
+      category: item.category
     };
   } catch (error) {
     console.error(`Error fetching product ${id}:`, error);

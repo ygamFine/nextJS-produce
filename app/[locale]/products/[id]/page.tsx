@@ -86,14 +86,43 @@ export default async function ProductDetailPage({ params }: any) {
                   </span>
                 </div>
               )}
+              
+              <div className="mt-8">
+                <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-md transition mr-4">
+                  {params.locale === 'en' ? 'Add to Cart' : '加入购物车'}
+                </button>
+                <button className="border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-medium py-3 px-6 rounded-md transition">
+                  {params.locale === 'en' ? 'Contact Us' : '联系我们'}
+                </button>
+              </div>
             </div>
           </div>
+          
+          {/* 产品详情部分 */}
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold mb-6">
+              {params.locale === 'en' ? 'Product Details' : '产品详情'}
+            </h2>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="prose prose-lg max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: product.description }} />
+              </div>
+            </div>
+          </div>
+          
+          {/* 相关产品推荐部分可以在这里添加 */}
         </div>
       ) : (
         <div className="text-center py-12">
           <h1 className="text-2xl font-medium text-gray-900">
             {params.locale === 'en' ? 'Product not found' : '产品未找到'}
           </h1>
+          <p className="mt-4 text-gray-500">
+            {params.locale === 'en' 
+              ? 'The product you are looking for does not exist or has been removed.' 
+              : '您查找的产品不存在或已被移除。'
+            }
+          </p>
         </div>
       )}
     </div>
