@@ -34,9 +34,9 @@ const getApiOptions = () => {
   return {
     headers: { 
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    next: { revalidate: 3600 } // 每小时重新验证一次
+    next: { revalidate: 60 } // 每小时重新验证一次
   };
 };
 
@@ -114,8 +114,8 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
 export async function fetchProducts(locale = 'zh') {
   try {
     const options = getApiOptions();
-    console.log('Products URL:', `${STRAPI_URL}/products?populate=*&locale=${locale}`)
-    const response = await fetch(`${STRAPI_URL}/products?populate=*&locale=${locale}`, options);
+    console.log('Products URL:', `${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`)
+    const response = await fetch(`${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`, options);
     
     if (!response.ok) {
       throw new Error('Failed to fetch products');
