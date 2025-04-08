@@ -1,7 +1,27 @@
-// @ts-nocheck
-import { fetchNewsItems, fetchSupportedLocales } from '@/lib/api';
+import { Metadata } from 'next';
 import Link from 'next/link';
+import { fetchNewsItems, fetchSupportedLocales } from '@/lib/api';
+import { commonRevalidate } from '@/lib/pageWrapper';
 
+// 生成元数据
+export async function generateMetadata({ params }: any): Promise<Metadata> {
+  const { locale } = params;
+  
+  return {
+    title: locale === 'en' ? 'News & Updates' : '新闻动态',
+    description: locale === 'en' 
+      ? 'Stay updated with our latest news and announcements' 
+      : '了解我们的最新新闻和公告'
+  };
+}
+
+// 静态生成所有语言版本
+export async function generateStaticParams() {
+  const locales = await fetchSupportedLocales();
+  return locales.map(locale => ({ locale: locale.code }));
+}
+
+// 新闻列表页面
 export default async function NewsPage({ params }: any) {
   const newsItems = await fetchNewsItems(params.locale);
   
@@ -55,7 +75,5 @@ export default async function NewsPage({ params }: any) {
   );
 }
 
-export async function generateStaticParams() {
-  const locales = await fetchSupportedLocales();
-  return locales.map(locale => ({ locale: locale.code }));
-} 
+// 设置页面重新验证时间
+export const revalidate = 3600; // 1小时 

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { fetchProducts, fetchSupportedLocales } from '@/lib/api';
+import { fetchCases, fetchSupportedLocales } from '@/lib/api';
 import { commonRevalidate } from '@/lib/pageWrapper';
 
 // 生成元数据
@@ -8,10 +8,10 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale } = params;
   
   return {
-    title: locale === 'en' ? 'Our Products' : '我们的产品',
+    title: locale === 'en' ? 'Case Studies' : '案例展示',
     description: locale === 'en' 
-      ? 'Explore our range of products and solutions' 
-      : '探索我们的产品和解决方案'
+      ? 'Explore our successful case studies and projects' 
+      : '探索我们成功的案例和项目'
   };
 }
 
@@ -21,41 +21,38 @@ export async function generateStaticParams() {
   return locales.map(locale => ({ locale: locale.code }));
 }
 
-// 产品列表页面
-export default async function ProductsPage({ params }: any) {
-  const products = await fetchProducts(params.locale);
+// 案例列表页面
+export default async function CasesPage({ params }: any) {
+  const cases = await fetchCases(params.locale);
   
   return (
     <div className="container mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold mb-8 text-center">
-        {params.locale === 'en' ? 'Our Products' : '我们的产品'}
+        {params.locale === 'en' ? 'Case Studies' : '案例展示'}
       </h1>
       
-      {products.length > 0 ? (
+      {cases.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map(product => (
+          {cases.map(item => (
             <Link 
-              href={`/${params.locale}/products/${product.id}`} 
-              key={product.id}
+              href={`/${params.locale}/cases/${item.id}`} 
+              key={item.id}
               className="group"
             >
               <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-48 overflow-hidden">
                   <img 
-                    src={product.image} 
-                    alt={product.name} 
+                    src={item.image} 
+                    alt={item.title} 
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                   />
                 </div>
                 <div className="p-6">
                   <h2 className="text-xl font-semibold mb-2 group-hover:text-indigo-600 transition">
-                    {product.name}
+                    {item.title}
                   </h2>
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <p className="text-lg font-bold text-indigo-600">
-                    ¥{product.price.toFixed(2)}
+                  <p className="text-gray-600 line-clamp-3">
+                    {item.summary}
                   </p>
                 </div>
               </div>
@@ -65,7 +62,7 @@ export default async function ProductsPage({ params }: any) {
       ) : (
         <div className="text-center py-12">
           <p className="text-gray-500">
-            {params.locale === 'en' ? 'No products found' : '没有找到产品'}
+            {params.locale === 'en' ? 'No case studies found' : '没有找到案例'}
           </p>
         </div>
       )}

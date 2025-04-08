@@ -82,4 +82,4 @@ export default async function HomePage({ params }: any ) {
 }
 
 // 设置页面重新验证时间
-export const revalidate = 3600; // 每小时重新验证一次 
+export const revalidate = 3600; // 1小时 

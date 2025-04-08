@@ -1,49 +1,94 @@
-// @ts-nocheck
-import { fetchCaseById, fetchSupportedLocales } from '@/lib/api';
+import { Metadata } from 'next';
+import { fetchCaseById, fetchCases, fetchSupportedLocales } from '@/lib/api';
+import { commonRevalidate } from '@/lib/pageWrapper';
 
+// 生成元数据
+export async function generateMetadata({ params }: any): Promise<Metadata> {
+  const { locale, id } = params;
+  const caseItem = await fetchCaseById(locale, id);
+  
+  if (!caseItem) {
+    return {
+      title: locale === 'en' ? 'Case Study Not Found' : '案例未找到',
+      description: ''
+    };
+  }
+  
+  return {
+    title: caseItem.title,
+    description: caseItem.summary.substring(0, 160)
+  };
+}
+
+// 静态生成参数
+export async function generateStaticParams() {
+  try {
+    // 获取所有支持的语言
+    const locales = await fetchSupportedLocales();
+    
+    // 为每种语言获取案例列表
+    const allParams = [];
+    
+    for (const locale of locales) {
+      const cases = await fetchCases(locale.code);
+      
+      // 为每个案例生成路径参数
+      const caseParams = cases.map(item => ({
+        locale: locale.code,
+        id: item.id.toString()
+      }));
+      
+      allParams.push(...caseParams);
+    }
+    
+    return allParams;
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    // 返回一个安全的默认值
+    return [{ locale: 'zh', id: '1' }];
+  }
+}
+
+// 案例详情页面
 export default async function CaseDetailPage({ params }: any) {
   const caseItem = await fetchCaseById(params.locale, params.id);
   
-  // 使用 API 获取的数据，如果没有则使用默认数据
-  const caseDetail = caseItem || {
-    title: '案例标题',
-    description: '案例详细描述...',
-    challenge: '项目挑战...',
-    solution: '解决方案...',
-    result: '项目成果...',
-    image: '/images/case1.jpg',
-  };
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold mb-8">{caseDetail.title}</h1>
-      <img
-        src={caseDetail.image}
-        alt={caseDetail.title}
-        className="w-full max-h-96 object-cover rounded-lg shadow-lg mb-8"
-      />
-      <div className="prose max-w-none">
-        <p className="mb-6">{caseDetail.description}</p>
-        
-        <h2 className="text-2xl font-bold mb-4">项目挑战</h2>
-        <p className="mb-6">{caseDetail.challenge}</p>
-        
-        <h2 className="text-2xl font-bold mb-4">解决方案</h2>
-        <p className="mb-6">{caseDetail.solution}</p>
-        
-        <h2 className="text-2xl font-bold mb-4">项目成果</h2>
-        <p>{caseDetail.result}</p>
-      </div>
+    <div className="container mx-auto px-4 py-12">
+      {caseItem ? (
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-4">{caseItem.title}</h1>
+          
+          <p className="text-gray-500 mb-6">
+            {new Date(caseItem.date).toLocaleDateString(
+              params.locale === 'en' ? 'en-US' : 'zh-CN'
+            )}
+          </p>
+          
+          {caseItem.image && (
+            <div className="mb-8">
+              <img 
+                src={caseItem.image} 
+                alt={caseItem.title} 
+                className="w-full h-auto rounded-lg shadow-md"
+              />
+            </div>
+          )}
+          
+          <div className="prose prose-lg max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: caseItem.content }} />
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-medium text-gray-900">
+            {params.locale === 'en' ? 'Case study not found' : '案例未找到'}
+          </h1>
+        </div>
+      )}
     </div>
   );
 }
 
-export async function generateStaticParams() {
-  const locales = await fetchSupportedLocales();
-  return locales.map(locale => ({ 
-    locale: locale.code,
-    id: 'placeholder'
-  }));
-}
-
-export const revalidate = 3600; // 每小时重新验证一次 
+// 设置页面重新验证时间
+export const revalidate = 3600; // 1小时 
