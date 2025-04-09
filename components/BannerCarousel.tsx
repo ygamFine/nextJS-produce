@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useLocale } from '@/contexts/LocaleContext'
 
 interface BannerCarouselProps {
-  banners: Banner[]
+  banners: any
   locale: string
   autoPlay?: boolean
   interval?: number

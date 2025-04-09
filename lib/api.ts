@@ -114,7 +114,6 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
 export async function fetchProducts(locale = 'zh') {
   try {
     const options = getApiOptions();
-    console.log('Products URL:', `${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`)
     const response = await fetch(`${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`, options);
     
     if (!response.ok) {
@@ -122,7 +121,6 @@ export async function fetchProducts(locale = 'zh') {
     }
     
     const data = await response.json();
-    console.log('Products data:', data)
     
     // 转换 Strapi 响应格式为应用所需格式
     return data.data?.map((item: any) => ({
@@ -145,7 +143,6 @@ export async function fetchProducts(locale = 'zh') {
 export async function fetchProductById(id: string, locale = 'zh') {
   try {
     const options = getApiOptions();
-    console.log('Products ByID URL:', `${STRAPI_URL}/products/${id}?populate=*&locale=${locale}`)
     const response = await fetch(`${STRAPI_URL}/products/${id}?populate=*&locale=${locale}`, options);
     
     if (!response.ok) {
@@ -153,7 +150,6 @@ export async function fetchProductById(id: string, locale = 'zh') {
     }
     
     const data = await response.json();
-    console.log('Products ByID data:', data)
     
     const item = data.data;
     return {
@@ -272,7 +268,6 @@ export async function fetchMenuItems(locale = 'zh'): Promise<MenuItem[]> {
       options, 
       cacheKey
     );
-    console.log('菜单返回值', data)
     // 确保数据结构正确
     if (!data || !data.data) {
       console.warn(`No menu data found for locale ${locale}`);
@@ -366,13 +361,11 @@ export async function fetchHomePageData(locale = 'zh'): Promise<HomePageData> {
     const options = getApiOptions();
     
     // 获取首页横幅数据，添加语言参数
-    console.log(`${STRAPI_URL}/banners?populate=*&locale=${locale}`)
     const bannerResponse = await fetch(`${STRAPI_URL}/banners?populate=*&locale=${locale}`, options);
     if (!bannerResponse.ok) {
       throw new Error('Failed to fetch banners');
     }
     const bannerData = await bannerResponse.json();
-    console.log('Banner data:', bannerData);
     
     // 转换数据格式
     return {

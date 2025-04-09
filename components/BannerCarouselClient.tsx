@@ -13,7 +13,7 @@ interface Banner {
 }
 
 interface BannerCarouselProps {
-  banners: Banner[];
+  banners: any;
   locale: string;
 }
 

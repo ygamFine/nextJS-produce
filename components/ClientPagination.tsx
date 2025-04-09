@@ -91,7 +91,7 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
     }
     
     // 去重并排序
-    return [...new Set(pages)].sort((a, b) => Math.abs(a) - Math.abs(b));
+    return Array.from(new Set(pages)).sort((a, b) => Math.abs(a) - Math.abs(b));
   };
   
   return (

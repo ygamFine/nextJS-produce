@@ -8,6 +8,7 @@ import { useLocale } from '@/contexts/LocaleContext'
 import { ClientOnly } from './ClientOnly'
 import { switchLanguage } from '@/lib/languageUtils'
 import { usePathname } from 'next/navigation'
+import { SearchBox } from './SearchBox'
 
 interface HeaderProps {
   siteName: string;
@@ -44,131 +45,125 @@ export function Header({ siteName, logo, menuItems = [] }: HeaderProps) {
                 <Image 
                   src={logo || '/logo.png'} 
                   alt={siteName} 
-                  width={40} 
-                  height={40} 
+                  width={32} 
+                  height={32} 
                   className="h-8 w-auto"
                 />
               </ClientOnly>
-              <span className="ml-3 text-xl font-bold text-gray-900">{siteName}</span>
+              <span className="ml-2 text-lg font-semibold">{siteName}</span>
             </Link>
-          </div>
-          
-          <div className="flex items-center">
-            {/* 导航菜单 */}
-            <nav className="hidden md:flex md:space-x-8">
+            
+            {/* 桌面端导航 */}
+            <nav className="hidden md:ml-6 md:flex md:space-x-8">
               {menuItems.map(item => {
-                // 确保 href 是正确的相对路径
+                // 处理链接
                 let href = item.href
-                
-                // 如果 href 是完整的 URL，提取路径部分
-                if (href.startsWith('http://') || href.startsWith('https://')) {
-                  try {
-                    const url = new URL(href)
-                    href = url.pathname
-                  } catch (e) {
-                    console.error('Invalid URL:', href)
-                  }
-                }
-                
-                // 确保 href 以斜杠开头
-                if (!href.startsWith('/')) {
+                if (!href.startsWith('/') && !href.startsWith('http')) {
                   href = '/' + href
                 }
                 
+                // 如果是外部链接，直接使用
+                if (href.startsWith('http')) {
+                  return (
+                    <a 
+                      key={item.id}
+                      href={href}
+                      className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      target={item.target || '_self'}
+                    >
+                      {item.name}
+                    </a>
+                  )
+                }
+                
+                // 内部链接添加语言前缀
                 return (
                   <Link 
-                    key={item.id} 
+                    key={item.id}
                     href={`/${locale}${href}`}
                     className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    target={item.target || '_self'}
                   >
                     {item.name}
                   </Link>
                 )
               })}
             </nav>
-            
-            {/* 语言切换器 - 增加左边距 */}
-            <div className="hidden md:flex md:items-center md:ml-8">
-              <div className="relative ml-3">
-                <select
-                  value={locale}
-                  onChange={handleLanguageChange}
-                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md py-1 px-3 text-sm"
-                >
-                  {availableLocales.map((loc) => (
-                    <option key={loc.code} value={loc.code}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          </div>
+          
+          {/* 右侧操作区域 */}
+          <div className="hidden md:flex items-center space-x-4">
+            {/* 添加搜索框 */}
+            <div className="w-48">
+              <SearchBox />
             </div>
             
-            {/* 移动端菜单按钮 */}
-            <div className="md:hidden ml-4">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-                aria-expanded="false"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+            {/* 语言切换器 */}
+            <div className="relative ml-3">
+              <select
+                value={locale}
+                onChange={handleLanguageChange}
+                className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md py-1 px-3 text-sm"
               >
-                <span className="sr-only">打开菜单</span>
-                <svg
-                  className={`${isMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-                <svg
-                  className={`${isMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                {availableLocales.map((loc) => (
+                  <option key={loc.code} value={loc.code}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
+          
+          {/* 移动端菜单按钮 */}
+          <div className="-mr-2 flex items-center md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            >
+              <span className="sr-only">打开菜单</span>
+              {/* 菜单图标 */}
+              <svg
+                className={`${isMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+              {/* 关闭图标 */}
+              <svg
+                className={`${isMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
-
+      
       {/* 移动端菜单 */}
       <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="pt-2 pb-3 space-y-1">
           {menuItems.map(item => {
-            // 确保 href 是正确的相对路径
+            // 处理链接
             let href = item.href
-            
-            // 如果 href 是完整的 URL，提取路径部分
-            if (href.startsWith('http://') || href.startsWith('https://')) {
-              try {
-                const url = new URL(href)
-                href = url.pathname
-              } catch (e) {
-                console.error('Invalid URL:', href)
-              }
-            }
-            
-            // 确保 href 以斜杠开头
-            if (!href.startsWith('/')) {
+            if (!href.startsWith('/') && !href.startsWith('http')) {
               href = '/' + href
             }
             
@@ -184,6 +179,11 @@ export function Header({ siteName, logo, menuItems = [] }: HeaderProps) {
               </Link>
             )
           })}
+        </div>
+        
+        {/* 在移动端菜单中也添加搜索框 */}
+        <div className="px-4 py-2">
+          <SearchBox />
         </div>
         
         {/* 在移动端菜单中也添加语言切换器 */}

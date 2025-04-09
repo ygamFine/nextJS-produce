@@ -33,7 +33,7 @@ export function Pagination({ currentPage, totalPages, basePath, locale, pageSize
   }
   
   // 去重并排序
-  pages = [...new Set(pages)].sort((a, b) => Math.abs(a) - Math.abs(b));
+  pages = Array.from(new Set(pages)).sort((a, b) => Math.abs(a) - Math.abs(b));
   
   return (
     <div className="flex justify-center items-center space-x-1 mt-8">
