@@ -37,7 +37,9 @@ export default function SearchClient({ locale }: { locale: string }) {
         // 加载搜索索引
         const searchData = await loadSearchIndex(locale);
         console.log('搜索索引', searchData);
-        // 简单的搜索实现 - 在标题和内容中查找关键词
+        
+        // 多关键词搜索实现
+        // 1. 分割查询词为多个关键词
         const keywords = query.toLowerCase().split(/\s+/).filter(k => k.length > 0);
         
         if (keywords.length === 0) {
@@ -46,50 +48,89 @@ export default function SearchClient({ locale }: { locale: string }) {
           return;
         }
         
-        // 执行搜索
-        const results = searchData.filter(item => {
+        // 2. 为每个搜索项计算匹配分数
+        const scoredResults = searchData.map(item => {
           const titleLower = (item.title || '').toLowerCase();
           const contentLower = (item.content || '').toLowerCase();
           
-          // 检查所有关键词是否至少在标题或内容中出现一次
-          return keywords.every(keyword => 
-            titleLower.includes(keyword) || contentLower.includes(keyword)
-          );
+          let score = 0;
+          let matchedKeywords = 0;
+          
+          // 计算每个关键词的匹配情况
+          for (const keyword of keywords) {
+            // 标题匹配得分更高
+            if (titleLower.includes(keyword)) {
+              score += 10;
+              matchedKeywords++;
+            }
+            
+            // 内容匹配
+            if (contentLower.includes(keyword)) {
+              score += 5;
+              matchedKeywords++;
+            }
+          }
+          
+          // 如果所有关键词都匹配，额外加分
+          if (matchedKeywords === keywords.length) {
+            score += 20;
+          }
+          
+          return {
+            item,
+            score,
+            matchedKeywords
+          };
         });
+        
+        // 3. 过滤掉没有匹配的项目，并按分数排序
+        const results = scoredResults
+          .filter(result => result.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(result => result.item);
+        
         console.log('最终的筛选结果', results);
         setSearchResults(results);
       } catch (err) {
         console.error('Search error:', err);
-        setError(translate('search.error', '搜索时出错，请稍后再试'));
+        setError(translate('search.error', '搜索时发生错误'));
       } finally {
         setIsLoading(false);
       }
     }
     
     performSearch();
-  }, [query, locale]);
+  }, [query, locale, t]);
+  
+  // 高亮显示匹配的文本
+  const highlightText = (text: string, keywords: string[]) => {
+    if (!text || keywords.length === 0) return text;
+    
+    let result = text;
+    const regex = new RegExp(`(${keywords.join('|')})`, 'gi');
+    result = result.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
+    
+    return result;
+  };
   
   return (
     <>
-      <h1 className="text-3xl font-bold mb-8 text-center">
-        {translate('search.title', '搜索结果')}
+      <h1 className="text-2xl font-bold mb-6">
+        {translate('search.results', '搜索结果')}
+        {query && (
+          <span className="text-gray-500 ml-2 font-normal">
+            {translate('search.for', '关于')} "{query}"
+          </span>
+        )}
       </h1>
       
-      <div className="mb-8">
-        <p className="text-gray-600">
-          {query ? (
-            translate('search.resultsFor', '搜索结果：') + ` "${query}"`
-          ) : (
-            translate('search.enterQuery', '请输入搜索关键词')
-          )}
-        </p>
-      </div>
-      
-      {error ? (
-        <div className="text-center py-12">
-          <p className="text-red-500">{error}</p>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
         </div>
-      ) : isLoading ? (
+      )}
+      
+      {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
@@ -103,6 +144,10 @@ export default function SearchClient({ locale }: { locale: string }) {
         </div>
       ) : (
         <div className="space-y-6">
+          <p className="text-sm text-gray-500 mb-4">
+            {translate('search.found', '找到')} {searchResults.length} {translate('search.items', '个结果')}
+          </p>
+          
           {searchResults.map((result) => (
             <Link 
               href={result.url || `/${locale}`} 
@@ -121,7 +166,9 @@ export default function SearchClient({ locale }: { locale: string }) {
                 )}
                 <div className="flex-grow">
                   <h2 className="text-xl font-semibold text-indigo-600">
-                    {result.title || translate('search.untitled', '无标题')}
+                    <span dangerouslySetInnerHTML={{ 
+                      __html: highlightText(result.title || translate('search.untitled', '无标题'), query.toLowerCase().split(/\s+/)) 
+                    }} />
                   </h2>
                   <div className="flex items-center mt-2">
                     <span className="bg-gray-100 px-2 py-1 rounded-full text-xs text-gray-600">
@@ -138,7 +185,9 @@ export default function SearchClient({ locale }: { locale: string }) {
                     )}
                   </div>
                   <p className="mt-3 text-gray-600">
-                    {(result.content || '').substring(0, 200)}
+                    <span dangerouslySetInnerHTML={{ 
+                      __html: highlightText((result.content || '').substring(0, 200), query.toLowerCase().split(/\s+/)) 
+                    }} />
                     {(result.content || '').length > 200 ? '...' : ''}
                   </p>
                 </div>
