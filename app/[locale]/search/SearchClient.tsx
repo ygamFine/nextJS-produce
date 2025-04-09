@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { loadSearchIndex, SearchItem } from '@/lib/search-indices';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -9,10 +9,16 @@ import { useLocale } from '@/contexts/LocaleContext';
 // 客户端搜索组件
 export default function SearchClient({ locale }: { locale: string }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const query = searchParams.get('q') || '';
+  const currentPage = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+  
   const [searchResults, setSearchResults] = useState<SearchItem[]>([]);
+  const [filteredResults, setFilteredResults] = useState<SearchItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalResults, setTotalResults] = useState(0);
   const { t } = useLocale();
   
   // 简单的翻译函数
@@ -30,6 +36,8 @@ export default function SearchClient({ locale }: { locale: string }) {
         // 如果没有查询词，不执行搜索
         if (!query.trim()) {
           setSearchResults([]);
+          setFilteredResults([]);
+          setTotalResults(0);
           setIsLoading(false);
           return;
         }
@@ -44,6 +52,8 @@ export default function SearchClient({ locale }: { locale: string }) {
         
         if (keywords.length === 0) {
           setSearchResults([]);
+          setFilteredResults([]);
+          setTotalResults(0);
           setIsLoading(false);
           return;
         }
@@ -91,6 +101,12 @@ export default function SearchClient({ locale }: { locale: string }) {
         
         console.log('最终的筛选结果', results);
         setSearchResults(results);
+        setTotalResults(results.length);
+        
+        // 应用分页
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        setFilteredResults(results.slice(startIndex, endIndex));
       } catch (err) {
         console.error('Search error:', err);
         setError(translate('search.error', '搜索时发生错误'));
@@ -100,7 +116,7 @@ export default function SearchClient({ locale }: { locale: string }) {
     }
     
     performSearch();
-  }, [query, locale, t]);
+  }, [query, locale, currentPage, pageSize, t]);
   
   // 高亮显示匹配的文本
   const highlightText = (text: string, keywords: string[]) => {
@@ -111,6 +127,143 @@ export default function SearchClient({ locale }: { locale: string }) {
     result = result.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
     
     return result;
+  };
+  
+  // 处理页码变化
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    router.push(`/${locale}/search?${params.toString()}`, { scroll: true });
+  };
+  
+  // 处理每页显示数量变化
+  const handlePageSizeChange = (size: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', '1');
+    params.set('pageSize', size.toString());
+    router.push(`/${locale}/search?${params.toString()}`, { scroll: true });
+  };
+  
+  // 计算总页数
+  const totalPages = Math.ceil(totalResults / pageSize);
+  
+  // 生成分页按钮
+  const renderPagination = () => {
+    if (totalResults <= pageSize) return null;
+    
+    // 计算要显示的页码范围
+    const range = 2; // 当前页前后显示的页数
+    let pages = [];
+    
+    // 添加页码
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 || // 第一页
+        i === totalPages || // 最后一页
+        (i >= currentPage - range && i <= currentPage + range) // 当前页附近
+      ) {
+        pages.push(i);
+      } else if (
+        (i === currentPage - range - 1 && i > 1) || // 前省略号
+        (i === currentPage + range + 1 && i < totalPages) // 后省略号
+      ) {
+        pages.push(-i); // 负数表示省略号位置
+      }
+    }
+    
+    // 去重并排序
+    pages = Array.from(new Set(pages)).sort((a, b) => Math.abs(a) - Math.abs(b));
+    
+    return (
+      <div className="flex justify-center items-center space-x-1 mt-8">
+        {/* 上一页按钮 */}
+        {currentPage > 1 ? (
+          <button 
+            onClick={() => handlePageChange(currentPage - 1)}
+            className="px-4 py-2 border rounded-md hover:bg-gray-50 transition"
+          >
+            {locale === 'en' ? 'Previous' : '上一页'}
+          </button>
+        ) : (
+          <span className="px-4 py-2 border rounded-md text-gray-400 cursor-not-allowed">
+            {locale === 'en' ? 'Previous' : '上一页'}
+          </span>
+        )}
+        
+        {/* 页码 */}
+        {pages.map((page, index) => {
+          if (page < 0) {
+            // 省略号
+            return (
+              <span key={`ellipsis-${index}`} className="px-4 py-2">
+                ...
+              </span>
+            );
+          }
+          
+          return page === currentPage ? (
+            // 当前页
+            <span 
+              key={page}
+              className="px-4 py-2 border rounded-md bg-indigo-600 text-white"
+            >
+              {page}
+            </span>
+          ) : (
+            // 其他页
+            <button 
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className="px-4 py-2 border rounded-md hover:bg-gray-50 transition"
+            >
+              {page}
+            </button>
+          );
+        })}
+        
+        {/* 下一页按钮 */}
+        {currentPage < totalPages ? (
+          <button 
+            onClick={() => handlePageChange(currentPage + 1)}
+            className="px-4 py-2 border rounded-md hover:bg-gray-50 transition"
+          >
+            {locale === 'en' ? 'Next' : '下一页'}
+          </button>
+        ) : (
+          <span className="px-4 py-2 border rounded-md text-gray-400 cursor-not-allowed">
+            {locale === 'en' ? 'Next' : '下一页'}
+          </span>
+        )}
+      </div>
+    );
+  };
+  
+  // 页面大小选择器
+  const renderPageSizeSelector = () => {
+    const sizes = [5, 10, 20, 50];
+    
+    return (
+      <div className="flex items-center justify-end mb-6">
+        <span className="mr-2 text-gray-600">
+          {locale === 'en' ? 'Items per page:' : '每页显示:'}
+        </span>
+        <div className="flex space-x-2">
+          {sizes.map(size => (
+            <button 
+              key={size}
+              onClick={() => handlePageSizeChange(size)}
+              className={`px-3 py-1 border rounded-md transition ${
+                pageSize === size 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   };
   
   return (
@@ -143,57 +296,72 @@ export default function SearchClient({ locale }: { locale: string }) {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          <p className="text-sm text-gray-500 mb-4">
-            {translate('search.found', '找到')} {searchResults.length} {translate('search.items', '个结果')}
-          </p>
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-sm text-gray-500">
+              {translate('search.found', '找到')} {totalResults} {translate('search.items', '个结果')}
+              {totalPages > 1 && (
+                <span className="ml-2">
+                  {translate('search.showing', '显示')} {(currentPage - 1) * pageSize + 1}-
+                  {Math.min(currentPage * pageSize, totalResults)} {translate('search.of', '共')} {totalResults}
+                </span>
+              )}
+            </p>
+            
+            {totalPages > 1 && renderPageSizeSelector()}
+          </div>
           
-          {searchResults.map((result) => (
-            <Link 
-              href={result.url || `/${locale}`} 
-              key={result.id}
-              className="block bg-white rounded-lg shadow-md hover:shadow-lg transition p-6"
-            >
-              <div className="flex">
-                {result.image && (
-                  <div className="flex-shrink-0 mr-6">
-                    <img 
-                      src={result.image} 
-                      alt={result.title || ''}
-                      className="w-24 h-24 object-cover rounded-md"
-                    />
-                  </div>
-                )}
-                <div className="flex-grow">
-                  <h2 className="text-xl font-semibold text-indigo-600">
-                    <span dangerouslySetInnerHTML={{ 
-                      __html: highlightText(result.title || translate('search.untitled', '无标题'), query.toLowerCase().split(/\s+/)) 
-                    }} />
-                  </h2>
-                  <div className="flex items-center mt-2">
-                    <span className="bg-gray-100 px-2 py-1 rounded-full text-xs text-gray-600">
-                      {result.type === 'product' 
-                        ? translate('search.product', '产品') 
-                        : result.type === 'case'
-                          ? translate('search.case', '案例')
-                          : translate('search.news', '新闻')}
-                    </span>
-                    {result.date && (
-                      <span className="ml-3 text-sm text-gray-500">
-                        {new Date(result.date).toLocaleDateString()}
+          <div className="space-y-6">
+            {filteredResults.map((result) => (
+              <Link 
+                href={result.url || `/${locale}`} 
+                key={result.id}
+                className="block bg-white rounded-lg shadow-md hover:shadow-lg transition p-6"
+              >
+                <div className="flex">
+                  {result.image && (
+                    <div className="flex-shrink-0 mr-6">
+                      <img 
+                        src={result.image} 
+                        alt={result.title || ''}
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-grow">
+                    <h2 className="text-xl font-semibold text-indigo-600">
+                      <span dangerouslySetInnerHTML={{ 
+                        __html: highlightText(result.title || translate('search.untitled', '无标题'), query.toLowerCase().split(/\s+/)) 
+                      }} />
+                    </h2>
+                    <div className="flex items-center mt-2">
+                      <span className="bg-gray-100 px-2 py-1 rounded-full text-xs text-gray-600">
+                        {result.type === 'product' 
+                          ? translate('search.product', '产品') 
+                          : result.type === 'case'
+                            ? translate('search.case', '案例')
+                            : translate('search.news', '新闻')}
                       </span>
-                    )}
+                      {result.date && (
+                        <span className="ml-3 text-sm text-gray-500">
+                          {new Date(result.date).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-3 text-gray-600">
+                      <span dangerouslySetInnerHTML={{ 
+                        __html: highlightText((result.content || '').substring(0, 200), query.toLowerCase().split(/\s+/)) 
+                      }} />
+                      {(result.content || '').length > 200 ? '...' : ''}
+                    </p>
                   </div>
-                  <p className="mt-3 text-gray-600">
-                    <span dangerouslySetInnerHTML={{ 
-                      __html: highlightText((result.content || '').substring(0, 200), query.toLowerCase().split(/\s+/)) 
-                    }} />
-                    {(result.content || '').length > 200 ? '...' : ''}
-                  </p>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
+          
+          {/* 分页控件 */}
+          {renderPagination()}
         </div>
       )}
     </>
