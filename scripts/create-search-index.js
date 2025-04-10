@@ -4,8 +4,10 @@ const http = require('http');
 const https = require('https');
 
 // 基础 URL 配置
-const STRAPI_URL = 'http://127.0.0.1:1337/api';
-const STRAPI_URL_IMG = 'http://127.0.0.1:1337';
+// const STRAPI_URL = 'http://127.0.0.1:1337/api';
+// const STRAPI_URL_IMG = 'http://127.0.0.1:1337';
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL
+const STRAPI_URL_IMG = process.env.NEXT_PUBLIC_STRAPI_API_PROXY
 
 // 辅助函数：获取 JSON 数据
 function fetchJson(url) {

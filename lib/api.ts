@@ -114,6 +114,8 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
 export async function fetchProducts(locale = 'zh') {
   try {
     const options = getApiOptions();
+    console.log('Product URL: ', `${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`)
+    console.log('Product Options: ', options)
     const response = await fetch(`${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`, options);
     
     if (!response.ok) {
