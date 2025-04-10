@@ -3,8 +3,8 @@ import path from 'path';
 import fs from 'fs';
 
 // Strapi API 基础 URL
-const STRAPI_URL = 'http://127.0.0.1:1337/api';
-const STRAPI_URL_IMG = 'http://127.0.0.1:1337';
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL
+const STRAPI_URL_IMG = process.env.NEXT_PUBLIC_STRAPI_API_PROXY
 
 // 缓存目录
 const CACHE_DIR = path.join(process.cwd(), '.next/cache/data');
