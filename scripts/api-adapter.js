@@ -19,9 +19,9 @@ async function fetchProducts(locale = 'zh') {
       name: item.name,
       description: item.decs,
       price: item.price || 0,
-      image: item.image?.url 
+      image: item.image?.url && !url.startsWith('http://') && !url.startsWith('https://')
         ? `${STRAPI_URL_IMG}${item.image?.url}`
-        : '/placeholder.jpg',
+        : `${item.image?.url}` || '/placeholder.jpg',
       category: item.category
     })) || [];
   } catch (error) {
