@@ -27,7 +27,10 @@ const getApiOptions = () => {
   if (!token) {
     console.warn("Strapi API Token is not set.");
     return {
-      next: { revalidate: 60 } // 每小时重新验证一次
+      next: { 
+        revalidate: 60,
+        tags: [] // 添加空的 tags 数组作为默认值
+      }
     };
   }
   
@@ -36,7 +39,10 @@ const getApiOptions = () => {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    next: { revalidate: 60 } // 每小时重新验证一次
+    next: { 
+      revalidate: 60,
+      tags: [] // 添加空的 tags 数组作为默认值
+    }
   };
 };
 
@@ -45,8 +51,9 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
   // 在客户端，直接获取数据，不使用缓存
   if (typeof window !== 'undefined') {
     try {
-      if(options && options.next && options.next instanceof Object) {
-        options.next.tags = ['menu']
+      // 使用类型断言确保 TypeScript 不会报错
+      if(options && options.next && typeof options.next === 'object') {
+        (options.next as any).tags = ['menu'];
       }
       const response = await fetch(url, options);
       
@@ -117,12 +124,13 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
 export async function fetchProducts(locale = 'zh') {
   try {
     const options = getApiOptions();
-    if(options && options.next && options.next instanceof Object) {
-      options.next.tags = ['prod']
+    // 使用类型断言确保 TypeScript 不会报错
+    if(options && options.next && typeof options.next === 'object') {
+      (options.next as any).tags = ['prod'];
     }
     
-    console.log('Product URL: ', `${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`)
-    console.log('Product Options: ', options)
+    console.log('Product URL: ', `${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`);
+    console.log('Product Options: ', options);
     const response = await fetch(`${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`, options);
     
     if (!response.ok) {
