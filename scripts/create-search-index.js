@@ -2,10 +2,6 @@
 const { fetchProducts, fetchNewsItems, fetchCases } = require('./api-adapter');
 const fs = require('fs');
 const path = require('path');
-const dotenv = require('dotenv');
-
-// 加载环境变量
-dotenv.config();
 
 // 创建搜索索引
 async function createSearchIndex() {
