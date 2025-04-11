@@ -42,13 +42,13 @@ export function Header({ siteName, logo, menuItems = [] }: HeaderProps) {
             {/* 首页链接添加语言前缀 */}
             <Link href={`/${locale}`} className="flex-shrink-0 flex items-center">
               <ClientOnly fallback={<div className="h-8 w-8 bg-gray-200 rounded-full"></div>}>
-                <Image 
+                { logo &&  <Image 
                   src={logo || '/logo.png'} 
                   alt={siteName} 
                   width={32} 
                   height={32} 
                   className="h-8 w-auto"
-                />
+                />}
               </ClientOnly>
               <span className="ml-2 text-lg font-semibold">{siteName}</span>
             </Link>
