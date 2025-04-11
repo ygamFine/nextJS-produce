@@ -14,8 +14,8 @@ export const metadata = {
   description: '使用 Next.js 和 Tailwind CSS 构建的企业网站模板',
 }
 
-// 添加 ISR 配置
-export const revalidate = 3600; // 每小时重新验证一次
+// 设置页面重新验证时间
+export const revalidate = 60; // 60秒
 
 // 定义支持的语言
 export async function generateStaticParams() {

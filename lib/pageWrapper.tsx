@@ -14,5 +14,5 @@ export async function generateCommonStaticParams() {
   return locales.map(locale => ({ locale: locale.code }));
 }
 
-// 通用的重新验证时间 (1小时)
-export const commonRevalidate = 3600; 
+// 通用的重新验证时间 (60秒)
+export const commonRevalidate = 60; 
