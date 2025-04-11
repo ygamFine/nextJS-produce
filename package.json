@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run create-translations && npm run create-search-index && next build",
+    "build": "npm run download-images && npm run create-translations && npm run create-search-index && next build",
     "start": "next start",
     "lint": "next lint",
+    "download-images": "node scripts/download-images.js",
     "generate-translations": "ts-node --project tsconfig.json scripts/generate-translations.ts || node scripts/generate-translations.js",
     "create-translations": "node scripts/generate-translations.js",
     "create-search-index": "node scripts/create-search-index.js"
