@@ -27,7 +27,7 @@ const getApiOptions = () => {
   if (!token) {
     console.warn("Strapi API Token is not set.");
     return {
-      next: { revalidate: 3600 } // 每小时重新验证一次
+      next: { revalidate: 60 } // 每小时重新验证一次
     };
   }
   
@@ -45,6 +45,9 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
   // 在客户端，直接获取数据，不使用缓存
   if (typeof window !== 'undefined') {
     try {
+      if(options && options.next && options.next instanceof Object) {
+        options.next.tags = ['menu']
+      }
       const response = await fetch(url, options);
       
       if (!response.ok) {
@@ -114,6 +117,10 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
 export async function fetchProducts(locale = 'zh') {
   try {
     const options = getApiOptions();
+    if(options && options.next && options.next instanceof Object) {
+      options.next.tags = ['prod']
+    }
+    
     console.log('Product URL: ', `${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`)
     console.log('Product Options: ', options)
     const response = await fetch(`${STRAPI_URL}/products?populate=*&sort=createdAt:desc&locale=${locale}`, options);
