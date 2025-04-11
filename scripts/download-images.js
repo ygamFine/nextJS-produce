@@ -35,14 +35,17 @@ async function downloadImage(url) {
   try {
     // 处理 URL 格式
     let fullUrl = url;
+    console.log('原始URL，处理前', fullUrl)
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       const baseUrl = process.env.NEXT_PUBLIC_STRAPI_API_PROXY || 'http://127.0.0.1:1337';
       fullUrl = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+      console.log('进入一级验证', fullUrl)
     }
     
     // 特殊处理 Strapi 媒体 URL
     if (fullUrl.includes('strapiapp.com/') && !fullUrl.includes('media.strapiapp.com')) {
       fullUrl = fullUrl.replace('strapiapp.com/', 'media.strapiapp.com/');
+      console.log('进入二级验证', fullUrl)
     }
     
     // 生成文件名
