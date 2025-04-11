@@ -25,6 +25,7 @@ export function OptimizedImage({
   sizes = '100vw',
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   
   // 处理图片加载完成
   const handleImageLoad = () => {
@@ -32,16 +33,17 @@ export function OptimizedImage({
   };
   
   // 处理图片加载错误
-  const handleImageError = (e: any) => {
-    console.error(`Error loading image: ${src}`, e);
+  const handleImageError = () => {
     setIsLoading(false);
+    setHasError(true);
+    console.error(`Failed to load image: ${src}`);
   };
   
-  // 确保 src 是有效的 URL
-  const imageSrc = src || '/placeholder.jpg';
+  // 处理图片 URL
+  const imageSrc = hasError ? '/placeholder.jpg' : (src || '/placeholder.jpg');
   
   return (
-    <div className={`relative overflow-hidden ${fill ? 'w-full h-full' : ''} ${className}`}>
+    <div className={`relative overflow-hidden ${className}`}>
       {isLoading && (
         <div className="absolute inset-0 bg-gray-200 animate-pulse" />
       )}

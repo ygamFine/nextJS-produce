@@ -98,8 +98,27 @@ function fetchJson(url) {
   });
 }
 
+/**
+ * 格式化图片 URL
+ * @param {string} url 图片 URL
+ * @returns {string} 格式化后的 URL
+ */
+function formatImageUrl(url) {
+  if (!url) return '/placeholder.jpg';
+  
+  // 如果已经是完整的 URL，直接返回
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // 如果是相对路径，添加基础 URL
+  const baseUrl = process.env.NEXT_PUBLIC_STRAPI_API_PROXY || 'http://127.0.0.1:1337';
+  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
 module.exports = {
   fetchProducts,
   fetchNewsItems,
-  fetchCases
+  fetchCases,
+  formatImageUrl
 }; 

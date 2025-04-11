@@ -40,6 +40,11 @@ async function downloadImage(url) {
       fullUrl = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
     }
     
+    // 特殊处理 Strapi 媒体 URL
+    if (fullUrl.includes('strapiapp.com/') && !fullUrl.includes('media.strapiapp.com')) {
+      fullUrl = fullUrl.replace('strapiapp.com/', 'media.strapiapp.com/');
+    }
+    
     // 生成文件名
     const hash = crypto.createHash('md5').update(fullUrl).digest('hex');
     const ext = path.extname(fullUrl) || '.jpg';
