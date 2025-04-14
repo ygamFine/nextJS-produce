@@ -15,9 +15,10 @@ interface FooterProps {
     phone: string;
     email: string;
   };
+  locale: string;
 }
 
-export function Footer({ copyright, links, socialMedia, contactInfo }: FooterProps) {
+export function Footer({ copyright, links, socialMedia, contactInfo, locale }: any) {
   return (
     <footer className="bg-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -121,6 +122,11 @@ export function Footer({ copyright, links, socialMedia, contactInfo }: FooterPro
         {/* 版权信息 */}
         <div className="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400">
           <p>{copyright}</p>
+          <div className="mt-2">
+            <Link href={`/${locale}/sitemap`} className="text-gray-400 hover:text-white">
+              {locale === 'en' ? 'Sitemap' : '站点地图'}
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

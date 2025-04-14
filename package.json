@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run download-images && npm run create-translations && npm run create-search-index && next build",
+    "build": "npm run download-images && npm run create-translations && npm run create-search-index && npm run generate-sitemap && next build",
     "start": "next start",
     "lint": "next lint",
     "download-images": "node scripts/download-images.js",
     "generate-translations": "ts-node --project tsconfig.json scripts/generate-translations.ts || node scripts/generate-translations.js",
     "create-translations": "node scripts/generate-translations.js",
-    "create-search-index": "node scripts/create-search-index.js"
+    "create-search-index": "node scripts/create-search-index.js",
+    "generate-sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.1",
