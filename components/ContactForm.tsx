@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { submitContactForm } from '@/lib/api';
+import { submitContactForm } from '@/lib/clientApi';
 import { useLocale } from '@/contexts/LocaleContext';
 
 export function ContactForm() {
@@ -43,7 +43,13 @@ export function ContactForm() {
     
     try {
       // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Submitting contact form', name, email, message);
+      await submitContactForm({
+        name: name,
+        email: email,
+        message: message,
+      })
       
       // 清空表单
       setName('');

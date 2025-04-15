@@ -1,24 +1,32 @@
 import type { HomePageData, Product, GlobalInfo, MenuItem } from './types';
-import path from 'path';
-import fs from 'fs';
 
 // Strapi API 基础 URL
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL
 const STRAPI_URL_IMG = process.env.NEXT_PUBLIC_STRAPI_API_PROXY
 
 // 缓存目录
-const CACHE_DIR = path.join(process.cwd(), '.next/cache/data');
-
-// 确保缓存目录存在
-if (typeof window === 'undefined' && !fs.existsSync(CACHE_DIR)) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-}
+const CACHE_DIR = process.cwd() + '/.next/cache/data';
 
 // 内存缓存
 const memoryCache: Record<string, { data: any, timestamp: number }> = {};
 
 // 缓存有效期（1小时）
 const CACHE_TTL = 60 * 60 * 1000;
+
+// 确保缓存目录存在 - 仅在服务器端执行
+if (typeof window === 'undefined') {
+  // 动态导入
+  import('fs').then(fs => {
+    import('path').then(path => {
+      const fullCachePath = path.join(process.cwd(), '.next/cache/data');
+      if (!fs.existsSync(fullCachePath)) {
+        fs.mkdirSync(fullCachePath, { recursive: true });
+      }
+    });
+  }).catch(err => {
+    console.error('Error importing fs/path modules:', err);
+  });
+}
 
 // 获取 API Token
 const getApiOptions = () => {
@@ -76,10 +84,14 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
     return memoryCache[cacheKey].data;
   }
   
-  // 2. 检查文件缓存
-  const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
-  if (fs.existsSync(cacheFile)) {
-    try {
+  // 2. 检查文件缓存 - 仅在服务器端执行
+  try {
+    // 动态导入 fs 和 path
+    const fs = await import('fs');
+    const path = await import('path');
+    const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
+    
+    if (fs.existsSync(cacheFile)) {
       const stats = fs.statSync(cacheFile);
       // 如果缓存文件不超过缓存有效期，使用缓存
       if ((now - stats.mtimeMs) < CACHE_TTL) {
@@ -88,9 +100,9 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
         memoryCache[cacheKey] = { data: cachedData, timestamp: now };
         return cachedData;
       }
-    } catch (error) {
-      console.error(`Error reading cache file ${cacheFile}:`, error);
     }
+  } catch (error) {
+    console.error(`Error with file cache:`, error);
   }
   
   // 3. 从 API 获取数据
@@ -106,11 +118,14 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
     // 4. 更新缓存
     memoryCache[cacheKey] = { data, timestamp: now };
     
-    // 写入文件缓存
+    // 写入文件缓存 - 仅在服务器端执行
     try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
       fs.writeFileSync(cacheFile, JSON.stringify(data));
     } catch (error) {
-      console.error(`Error writing cache file ${cacheFile}:`, error);
+      console.error(`Error writing cache file:`, error);
     }
     
     return data;
@@ -195,7 +210,7 @@ interface ContactFormData {
 export async function submitContactForm(formData: ContactFormData) {
   try {
     const options = getApiOptions();
-    const response = await fetch(`${STRAPI_URL}/contact-forms`, {
+    const response = await fetch(`${STRAPI_URL}/inquiries`, {
       method: 'POST',
       ...options,
       body: JSON.stringify({ data: formData }),
@@ -662,4 +677,63 @@ export async function fetchCases(locale = 'zh') {
     console.error('Error fetching cases:', error);
     return [];
   }
+}
+
+// API 基础 URL
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
+
+// 通用 API 请求函数
+async function fetchAPI(endpoint: string, options: RequestInit = {}) {
+  if (!API_TOKEN) {
+    console.error('API Token not configured');
+    throw new Error('API Token not configured');
+  }
+
+  const defaultOptions: RequestInit = {
+    headers: {
+      'Authorization': `Bearer ${API_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+  };
+
+  const mergedOptions = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...options.headers,
+    },
+  };
+
+  console.log(`Sending request to: ${API_URL}${endpoint}`);
+  
+  const response = await fetch(`${API_URL}${endpoint}`, mergedOptions);
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => 'Unknown error');
+    console.error(`API error (${response.status}): ${errorText}`);
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  }
+
+  return await response.json();
+}
+
+// 提交询盘表单
+export async function submitInquiry(formData: any) {
+  console.log('Submitting inquiry:', formData);
+  
+  return fetchAPI('/api/inquiries', {
+    method: 'POST',
+    body: JSON.stringify({
+      data: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company || '',
+        message: formData.message,
+        status: 'new', // 默认状态为新询盘
+      }
+    }),
+  });
 } 
