@@ -685,7 +685,7 @@ export async function fetchCases(locale = 'zh') {
 }
 
 // API 基础 URL
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337';
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337/api';
 const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
 
 // 通用 API 请求函数
@@ -728,7 +728,7 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
 export async function submitInquiry(formData: any) {
   console.log('Submitting inquiry:', formData);
   
-  return fetchAPI('/api/inquiries', {
+  return fetchAPI('/inquiries', {
     method: 'POST',
     body: JSON.stringify({
       data: {
