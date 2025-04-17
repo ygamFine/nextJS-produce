@@ -1,17 +1,10 @@
 import { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
-
-// 从 API 导入函数
-import { fetchProducts } from '@/lib/api';
-import { AnyARecord } from 'node:dns';
-
-// 简单的价格格式化函数
-function formatPrice(price: number, locale: string) {
-  const currencySymbol = locale === 'en' ? '$' : '¥';
-  return `${currencySymbol}${price.toFixed(2)}`;
-}
+import { fetchProducts, fetchInternalLinkKeywords, processInternalLinks } from '@/lib/api';
+import { formatPrice } from '@/lib/utils';
+import { RelatedProducts } from '@/components/RelatedProducts';
 
 // 生成元数据
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -36,7 +29,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
         ? (product.description.length > 160 
             ? product.description.substring(0, 157) + '...' 
             : product.description)
-        : (locale === 'en' ? 'Product details' : '产品详情'),
+        : (locale === 'en' ? 'Product details' : '产品详情')
     };
   } catch (error) {
     console.error('Error generating metadata:', error);
@@ -90,37 +83,58 @@ export default async function ProductPage({ params }: any) {
       notFound();
     }
     
-    // 安全处理可能为空的字段
-    const productName = product.title || product.name || (locale === 'en' ? 'Unnamed Product' : '未命名产品');
+    // 获取内链关键词
+    const keywordsMap = await fetchInternalLinkKeywords(locale);
+    
+    // 提取产品信息
+    const productName = product.title || product.name || '';
     const productDescription = product.description || '';
     const productPrice = product.price || 0;
     const productImage = product.image || '/placeholder.jpg';
     
+    // 处理产品描述中的内链
+    const processedDescription = processInternalLinks(
+      productDescription, 
+      keywordsMap,
+      locale
+    );
+    
+    // 查找相关产品
+    const relatedProducts = products
+      .filter(p => p.id.toString() !== id)
+      .slice(0, 4); // 最多显示4个相关产品
+    
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-6xl mx-auto">
+      <div className="bg-white">
+        <div className="container mx-auto px-4 py-12">
           {/* 面包屑导航 */}
-          <div className="mb-6">
-            <nav className="text-sm">
-              <Link href={`/${locale}`} className="text-gray-500 hover:text-gray-700">
-                {locale === 'en' ? 'Home' : '首页'}
-              </Link>
-              <span className="mx-2 text-gray-400">/</span>
-              <Link href={`/${locale}/products`} className="text-gray-500 hover:text-gray-700">
-                {locale === 'en' ? 'Products' : '产品'}
-              </Link>
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-gray-900">{productName}</span>
-            </nav>
-          </div>
+          <nav className="mb-8">
+            <ol className="flex space-x-2 text-sm text-gray-500">
+              <li>
+                <Link href={`/${locale}`} className="hover:text-gray-700">
+                  {locale === 'en' ? 'Home' : '首页'}
+                </Link>
+              </li>
+              <li><span className="mx-2">/</span></li>
+              <li>
+                <Link href={`/${locale}/products`} className="hover:text-gray-700">
+                  {locale === 'en' ? 'Products' : '产品'}
+                </Link>
+              </li>
+              <li><span className="mx-2">/</span></li>
+              <li className="text-gray-900 font-medium">{productName}</li>
+            </ol>
+          </nav>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {/* 产品详情 */}
+          <div className="grid md:grid-cols-2 gap-12">
             {/* 产品图片 */}
-            <div className="relative h-96 rounded-lg overflow-hidden bg-gray-100">
-              <Image
+            <div className="bg-gray-100 rounded-lg overflow-hidden">
+              <Image 
                 src={productImage}
                 alt={productName}
-                fill
+                width={600}
+                height={600}
                 className="object-contain"
                 priority
               />
@@ -134,7 +148,7 @@ export default async function ProductPage({ params }: any) {
               </p>
               
               <div className="prose mb-8">
-                <p>{productDescription}</p>
+                <div dangerouslySetInnerHTML={{ __html: processedDescription }} />
               </div>
               
               {/* 简单的按钮 */}
@@ -145,6 +159,14 @@ export default async function ProductPage({ params }: any) {
               </button>
             </div>
           </div>
+          
+          {/* 相关产品 */}
+          {relatedProducts.length > 0 && (
+            <RelatedProducts 
+              products={relatedProducts}
+              locale={locale}
+            />
+          )}
         </div>
       </div>
     );

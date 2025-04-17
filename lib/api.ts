@@ -56,15 +56,16 @@ const getApiOptions = () => {
 
 // 通用的数据获取函数，支持 SSG 和 ISR
 async function fetchWithCache(url: string, options: any, cacheKey: string) {
+  console.log('cacheKey url：', url)
   // 在客户端，直接获取数据，不使用缓存
   if (typeof window !== 'undefined') {
     try {
       // 使用类型断言确保 TypeScript 不会报错
       if(options && options.next && typeof options.next === 'object') {
-        (options.next as any).tags = ['menu'];
+        (options.next as any).tags = [cacheKey];
       }
       const response = await fetch(url, options);
-      
+      console.log('客户端：接口请求返回的数据', response)
       if (!response.ok) {
         throw new Error(`Failed to fetch data from ${url}`);
       }
@@ -78,32 +79,33 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
   
   // 以下代码只在服务器端执行
   
-  // 1. 检查内存缓存
-  const now = Date.now();
-  if (memoryCache[cacheKey] && (now - memoryCache[cacheKey].timestamp) < CACHE_TTL) {
-    return memoryCache[cacheKey].data;
-  }
+  // // 1. 检查内存缓存
+  // const now = Date.now();
+  // if (memoryCache[cacheKey] && (now - memoryCache[cacheKey].timestamp) < CACHE_TTL) {
+  //   console.log('缓存：接口请求返回的数据', memoryCache[cacheKey].data)
+  //   return memoryCache[cacheKey].data;
+  // }
   
-  // 2. 检查文件缓存 - 仅在服务器端执行
-  try {
-    // 动态导入 fs 和 path
-    const fs = await import('fs');
-    const path = await import('path');
-    const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
+  // // 2. 检查文件缓存 - 仅在服务器端执行
+  // try {
+  //   // 动态导入 fs 和 path
+  //   const fs = await import('fs');
+  //   const path = await import('path');
+  //   const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
     
-    if (fs.existsSync(cacheFile)) {
-      const stats = fs.statSync(cacheFile);
-      // 如果缓存文件不超过缓存有效期，使用缓存
-      if ((now - stats.mtimeMs) < CACHE_TTL) {
-        const cachedData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-        // 更新内存缓存
-        memoryCache[cacheKey] = { data: cachedData, timestamp: now };
-        return cachedData;
-      }
-    }
-  } catch (error) {
-    console.error(`Error with file cache:`, error);
-  }
+  //   if (fs.existsSync(cacheFile)) {
+  //     const stats = fs.statSync(cacheFile);
+  //     // 如果缓存文件不超过缓存有效期，使用缓存
+  //     if ((now - stats.mtimeMs) < CACHE_TTL) {
+  //       const cachedData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+  //       // 更新内存缓存
+  //       memoryCache[cacheKey] = { data: cachedData, timestamp: now };
+  //       return cachedData;
+  //     }
+  //   }
+  // } catch (error) {
+  //   console.error(`Error with file cache:`, error);
+  // }
   
   // 3. 从 API 获取数据
   try {
@@ -114,9 +116,10 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
     }
     
     const data = await response.json();
+    console.log('客户端3：接口请求返回的数据', data)
     
-    // 4. 更新缓存
-    memoryCache[cacheKey] = { data, timestamp: now };
+    // // 4. 更新缓存
+    // memoryCache[cacheKey] = { data, timestamp: now };
     
     // 写入文件缓存 - 仅在服务器端执行
     try {
@@ -163,7 +166,7 @@ export async function fetchProducts(locale = 'zh') {
       image: item.image?.url 
         ? `${STRAPI_URL_IMG}${item.image?.url}`
         : '/placeholder.jpg',
-      category: item.category
+      category: item.category,
     })) || [];
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -733,4 +736,75 @@ export async function submitInquiry(formData: any) {
       }
     }),
   });
+}
+
+// 获取内链关键词
+export async function fetchInternalLinkKeywords(locale = 'zh') {
+  try {
+    const options = getApiOptions();
+    const cacheKey = `internal-link-keywords-${locale}`;
+    
+    const data = await fetchWithCache(
+      `${STRAPI_URL}/keyword?populate=*&locale=${locale}`, 
+      options, 
+      cacheKey
+    );
+    
+    console.log('关键词数据',data)
+    // if (data && data.data) {
+    //   data.data.keys.forEach((item: any) => {
+    //     const keyword = item.keyword || item.attributes?.keyword;
+    //     const targetProductId = item.targetProductId || item.attributes?.targetProductId;
+        
+    //     if (keyword && targetProductId) {
+    //       keywordsMap[keyword] = targetProductId.toString();
+    //     }
+    //   });
+    // }
+    
+    return data.data.keys;
+  } catch (error) {
+    console.error('Error fetching internal link keywords:', error);
+    return {};
+  }
+}
+
+// 处理产品描述中的关键词并生成内链
+export function processInternalLinks(
+  text: string, 
+  keywordsMap: Record<string, string>,
+  locale: string
+): string {
+  if (!text || !keywordsMap || Object.keys(keywordsMap).length === 0) {
+    return text;
+  }
+  
+  let result = text;
+  
+  // 按关键词长度降序排序，优先处理较长的关键词
+  const sortedKeywords = Object.entries(keywordsMap)
+    .filter(([k, v]) => k && v)
+    .sort(([a], [b]) => b.length - a.length);
+  
+  // 处理每个关键词
+  for (const [keyword, targetId] of sortedKeywords) {
+    // 检查关键词是否在文本中
+    if (result.includes(keyword)) {
+      // 检查关键词是否已经在链接中
+      const linkPattern = new RegExp(`<a[^>]*>[^<]*${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*</a>`);
+      if (linkPattern.test(result)) {
+        continue; // 如果关键词已经在链接中，跳过
+      }
+      
+      // 替换第一个匹配项
+      const parts = result.split(keyword);
+      if (parts.length > 1) {
+        result = parts[0] + 
+                `<a href="/${locale}/products/${targetId}" class="text-indigo-600 hover:underline">${keyword}</a>` + 
+                parts.slice(1).join(keyword);
+      }
+    }
+  }
+  
+  return result;
 } 

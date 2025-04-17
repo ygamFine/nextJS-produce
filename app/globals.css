@@ -15,7 +15,8 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    /* --foreground: #ededed; */
+    --foreground: #333;
   }
 }
 
@@ -55,4 +56,8 @@ body {
 
 .prose p {
   @apply mb-4;
+}
+
+option{
+  color: #fff !important;
 }
