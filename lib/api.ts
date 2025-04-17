@@ -64,6 +64,7 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
       if(options && options.next && typeof options.next === 'object') {
         (options.next as any).tags = [cacheKey];
       }
+      console.log('接口的配置', options)
       const response = await fetch(url, options);
       console.log('客户端：接口请求返回的数据', response)
       if (!response.ok) {
@@ -79,36 +80,37 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
   
   // 以下代码只在服务器端执行
   
-  // // 1. 检查内存缓存
-  // const now = Date.now();
-  // if (memoryCache[cacheKey] && (now - memoryCache[cacheKey].timestamp) < CACHE_TTL) {
-  //   console.log('缓存：接口请求返回的数据', memoryCache[cacheKey].data)
-  //   return memoryCache[cacheKey].data;
-  // }
+  // 1. 检查内存缓存
+  const now = Date.now();
+  if (memoryCache[cacheKey] && (now - memoryCache[cacheKey].timestamp) < CACHE_TTL) {
+    console.log('缓存：接口请求返回的数据', memoryCache[cacheKey].data)
+    return memoryCache[cacheKey].data;
+  }
   
-  // // 2. 检查文件缓存 - 仅在服务器端执行
-  // try {
-  //   // 动态导入 fs 和 path
-  //   const fs = await import('fs');
-  //   const path = await import('path');
-  //   const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
+  // 2. 检查文件缓存 - 仅在服务器端执行
+  try {
+    // 动态导入 fs 和 path
+    const fs = await import('fs');
+    const path = await import('path');
+    const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
     
-  //   if (fs.existsSync(cacheFile)) {
-  //     const stats = fs.statSync(cacheFile);
-  //     // 如果缓存文件不超过缓存有效期，使用缓存
-  //     if ((now - stats.mtimeMs) < CACHE_TTL) {
-  //       const cachedData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-  //       // 更新内存缓存
-  //       memoryCache[cacheKey] = { data: cachedData, timestamp: now };
-  //       return cachedData;
-  //     }
-  //   }
-  // } catch (error) {
-  //   console.error(`Error with file cache:`, error);
-  // }
+    if (fs.existsSync(cacheFile)) {
+      const stats = fs.statSync(cacheFile);
+      // 如果缓存文件不超过缓存有效期，使用缓存
+      if ((now - stats.mtimeMs) < CACHE_TTL) {
+        const cachedData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+        // 更新内存缓存
+        memoryCache[cacheKey] = { data: cachedData, timestamp: now };
+        return cachedData;
+      }
+    }
+  } catch (error) {
+    console.error(`Error with file cache:`, error);
+  }
   
   // 3. 从 API 获取数据
   try {
+    console.log('接口的配置', options)
     const response = await fetch(url, options);
     
     if (!response.ok) {
@@ -119,7 +121,7 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
     console.log('客户端3：接口请求返回的数据', data)
     
     // // 4. 更新缓存
-    // memoryCache[cacheKey] = { data, timestamp: now };
+    memoryCache[cacheKey] = { data, timestamp: now };
     
     // 写入文件缓存 - 仅在服务器端执行
     try {
