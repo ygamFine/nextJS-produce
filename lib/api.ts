@@ -728,16 +728,50 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
 export async function submitInquiry(formData: any) {
   console.log('Submitting inquiry:', formData);
   
-  return fetchAPI('/inquiries', {
-    method: 'POST',
-    body: JSON.stringify({
-      data: {
-        name: formData.name,
-        email: formData.email,
-        message: formData.message,
-      }
-    }),
-  });
+  // 确保 API_URL 已经包含 /api 前缀
+  const endpoint = '/inquiries';
+  
+  // 添加更多调试信息
+  console.log(`Full request URL: ${API_URL}${endpoint}`);
+  console.log('Request body:', JSON.stringify({
+    data: {
+      name: formData.name,
+      email: formData.email,
+      message: formData.message,
+    }
+  }));
+  
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }
+      }),
+    });
+    
+    // 详细记录响应信息
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API error (${response.status}): ${errorText}`);
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error submitting inquiry:', error);
+    throw error;
+  }
 }
 
 // 获取内链关键词
