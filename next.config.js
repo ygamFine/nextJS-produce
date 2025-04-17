@@ -6,6 +6,8 @@ const nextConfig = {
       '127.0.0.1',
       'victorious-wisdom-f9f44dd049.strapiapp.com',
       'victorious-wisdom-f9f44dd049.media.strapiapp.com', // 添加媒体域名
+      'positive-song-f27137b058.media.strapiapp.com',
+      'media.strapiapp.com'
     ],
     // 可选：配置图片缓存时间（单位：秒）
     minimumCacheTTL: 60 * 60 * 24 * 7, // 7天
