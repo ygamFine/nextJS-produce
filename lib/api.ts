@@ -729,10 +729,7 @@ export async function submitInquiry(formData: any) {
       data: {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
-        company: formData.company || '',
         message: formData.message,
-        status: 'new', // 默认状态为新询盘
       }
     }),
   });
