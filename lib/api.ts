@@ -11,7 +11,7 @@ const CACHE_DIR = process.cwd() + '/.next/cache/data';
 const memoryCache: Record<string, { data: any, timestamp: number }> = {};
 
 // 缓存有效期（1小时）
-const CACHE_TTL = 60 * 60 * 1000;
+const CACHE_TTL = 60 * 1000;
 
 // 确保缓存目录存在 - 仅在服务器端执行
 if (typeof window === 'undefined') {
