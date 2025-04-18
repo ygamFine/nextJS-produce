@@ -745,13 +745,15 @@ export async function submitInquiry(formData: any) {
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`,
+        'Authorization': `${API_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: formData.name,
-        email: formData.email,
-        message: formData.message,
+        data: {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }
       }),
     });
     
