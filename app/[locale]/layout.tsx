@@ -101,6 +101,7 @@ export default async function LocaleLayout({
               links={globalInfo.footer.links}
               socialMedia={globalInfo.footer.socialMedia}
               contactInfo={globalInfo.contactInfo}
+              locale={params.locale}
             />
             <BackToTop />
           </LocaleProvider>

@@ -15,10 +15,16 @@ interface FooterProps {
     phone: string;
     email: string;
   };
-  locale: string;
+  locale?: string;
 }
 
-export function Footer({ copyright, links, socialMedia, contactInfo, locale }: any) {
+export function Footer({ copyright, links, socialMedia, contactInfo, locale = 'en' }: FooterProps) {
+  // 添加调试代码
+  console.log('Footer locale:', locale);
+  
+  // 确保 locale 有值
+  const safeLocale = locale || 'en';
+  
   return (
     <footer className="bg-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -123,8 +129,8 @@ export function Footer({ copyright, links, socialMedia, contactInfo, locale }: a
         <div className="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400">
           <p>{copyright}</p>
           <div className="mt-2">
-            <Link href={`/${locale}/sitemap`} className="text-gray-400 hover:text-white">
-              {locale === 'en' ? 'Sitemap' : '站点地图'}
+            <Link href={`/${safeLocale}/sitemap`} className="text-gray-400 hover:text-white">
+              {safeLocale === 'en' ? 'Sitemap' : '站点地图'}
             </Link>
           </div>
         </div>
