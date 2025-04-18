@@ -749,11 +749,9 @@ export async function submitInquiry(formData: any) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        data: {
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-        }
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
       }),
     });
     
