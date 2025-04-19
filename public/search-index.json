@@ -1,0 +1,181 @@
+{
+  "zh": {
+    "products": [
+      {
+        "id": "j8sx6am4eur2hxcwjbu2y0eg",
+        "type": "product",
+        "title": "咖啡",
+        "content": "这是咖啡的产品介绍",
+        "url": "/zh/products/j8sx6am4eur2hxcwjbu2y0eg"
+      },
+      {
+        "id": "dfw0h6s3zp42jee07g504e06",
+        "type": "product",
+        "title": "螳螂虾",
+        "content": "这里是螳螂虾的介绍",
+        "url": "/zh/products/dfw0h6s3zp42jee07g504e06"
+      }
+    ],
+    "news": []
+  },
+  "en": {
+    "products": [
+      {
+        "id": "e7qkdounkovczpxcmuttp42h",
+        "type": "product",
+        "title": "女人",
+        "content": null,
+        "url": "/en/products/e7qkdounkovczpxcmuttp42h"
+      },
+      {
+        "id": "kfkh725ytg1k3m636mcgxo1c",
+        "type": "product",
+        "title": "男人",
+        "content": null,
+        "url": "/en/products/kfkh725ytg1k3m636mcgxo1c"
+      },
+      {
+        "id": "ov2g0jcwionqfklcobc4oops",
+        "type": "product",
+        "title": "雪山",
+        "content": null,
+        "url": "/en/products/ov2g0jcwionqfklcobc4oops"
+      },
+      {
+        "id": "un7t5fmowxd3k3rgs75lg4rv",
+        "type": "product",
+        "title": "嘎嘎嘎123",
+        "content": "嘎嘎嘎",
+        "url": "/en/products/un7t5fmowxd3k3rgs75lg4rv"
+      },
+      {
+        "id": "rp8ny5815euv0hdmyk4x7evh",
+        "type": "product",
+        "title": "咖啡",
+        "content": "细腻的咖啡，专为追求精致口感的咖啡爱好者打造。我们精选全球优质咖啡豆，以精细的烘焙工艺，将咖啡的醇香与细腻完美融合。每一杯都如丝绸般顺滑，层次丰富，回味悠长。\n\n无论是清晨的第一缕阳光，还是午后的小憩时光，细腻的咖啡都能为你带来恰到好处的温暖与享受。",
+        "url": "/en/products/rp8ny5815euv0hdmyk4x7evh"
+      },
+      {
+        "id": "ezm8i5b6ojbsyuk37ebt2zy3",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/ezm8i5b6ojbsyuk37ebt2zy3"
+      },
+      {
+        "id": "q956la91xd05b9a2smovwzqy",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/q956la91xd05b9a2smovwzqy"
+      },
+      {
+        "id": "tenmmhm6hbu5hol7bv5u6p1f",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/tenmmhm6hbu5hol7bv5u6p1f"
+      },
+      {
+        "id": "hs574vhznlncf87nwwrxtphs",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/hs574vhznlncf87nwwrxtphs"
+      },
+      {
+        "id": "bjciiagjzflcx4s96glffyxj",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/bjciiagjzflcx4s96glffyxj"
+      },
+      {
+        "id": "qel35yfo0q3392mwyxobcwqa",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/qel35yfo0q3392mwyxobcwqa"
+      },
+      {
+        "id": "whuj73gm6v1chh5uas1hrm6s",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/whuj73gm6v1chh5uas1hrm6s"
+      },
+      {
+        "id": "ttwu2btmgikgeevhn62jciap",
+        "type": "product",
+        "title": "自定义产品",
+        "content": "自定义产品自定义产品",
+        "url": "/en/products/ttwu2btmgikgeevhn62jciap"
+      },
+      {
+        "id": "vmukzawxn7d1jxkllfe6g0sh",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/vmukzawxn7d1jxkllfe6g0sh"
+      },
+      {
+        "id": "xgwe0uqmbredcaz5a6v4w5fz",
+        "type": "product",
+        "title": "黑洞",
+        "content": "黑洞黑洞黑洞黑洞黑洞黑洞",
+        "url": "/en/products/xgwe0uqmbredcaz5a6v4w5fz"
+      },
+      {
+        "id": "zp0mfspk8dfgwbrqpgyszbp5",
+        "type": "product",
+        "title": "第二次测试",
+        "content": "第二次测试第二次测试第二次测试第二次测试",
+        "url": "/en/products/zp0mfspk8dfgwbrqpgyszbp5"
+      },
+      {
+        "id": "dfw0h6s3zp42jee07g504e06",
+        "type": "product",
+        "title": "project1",
+        "content": "这里是 project1 的介绍",
+        "url": "/en/products/dfw0h6s3zp42jee07g504e06"
+      }
+    ],
+    "news": [
+      {
+        "id": "vigas244mga00wpaflk03n7s",
+        "type": "news",
+        "title": "A bug is becoming a meme on the internet",
+        "content": "A bug is becoming a meme on the internet",
+        "url": "/en/news/vigas244mga00wpaflk03n7s"
+      },
+      {
+        "id": "gbpdfc8tkwl560c1reepi1y0",
+        "type": "news",
+        "title": "Beautiful picture",
+        "content": "Beautiful picture",
+        "url": "/en/news/gbpdfc8tkwl560c1reepi1y0"
+      },
+      {
+        "id": "fy8rchqsi5s490wnj75udjvj",
+        "type": "news",
+        "title": "The internet's Own boy",
+        "content": "The internet's Own boy",
+        "url": "/en/news/fy8rchqsi5s490wnj75udjvj"
+      },
+      {
+        "id": "pltu6zbsn6phmztr5t6tmznc",
+        "type": "news",
+        "title": "This shrimp is awesome",
+        "content": "This shrimp is awesome",
+        "url": "/en/news/pltu6zbsn6phmztr5t6tmznc"
+      },
+      {
+        "id": "j5gicsovyyplbn3dmyelnafc",
+        "type": "news",
+        "title": "What's inside a Black Hole",
+        "content": "What's inside a Black Hole",
+        "url": "/en/news/j5gicsovyyplbn3dmyelnafc"
+      }
+    ]
+  }
+}
