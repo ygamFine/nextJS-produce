@@ -87,6 +87,5 @@ export default async function NewsPage({ params }: any) {
     </div>
   );
 }
-
 // 设置页面重新验证时间
 export const revalidate = 60; // 60秒

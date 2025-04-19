@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
-import { fetchProducts, fetchNewsItems } from '@/lib/api';
+import { fetchProducts, fetchNewsItems, fetchCases } from '@/lib/api';
 
 // 创建搜索索引的函数
 async function createSearchIndex() {
@@ -49,22 +49,8 @@ async function createSearchIndex() {
       }
     };
     
-    // 如果在服务器端，将索引写入文件
-    if (typeof window === 'undefined') {
-      try {
-        const fs = await import('fs').catch(() => null);
-        const path = await import('path').catch(() => null);
-        
-        if (fs && path) {
-          const indexPath = path.join(process.cwd(), 'public', 'search-index.json');
-          fs.writeFileSync(indexPath, JSON.stringify(searchIndex, null, 2));
-          console.log(`Search index written to ${indexPath}`);
-        }
-      } catch (error) {
-        console.error('Error writing search index to file:', error);
-      }
-    }
-    
+    // 在实际应用中，这里应该将索引写入文件系统
+    // 但在 API 路由中，我们只返回生成的索引
     return searchIndex;
   } catch (error) {
     console.error('Error creating search index:', error);
@@ -72,15 +58,16 @@ async function createSearchIndex() {
   }
 }
 
-// API 路由处理函数
-export async function GET(request: Request) {
+// 统一的内容管理 API 端点
+export async function GET(request: NextRequest) {
   try {
-    // 检查授权（可选）
+    // 获取操作类型参数
     const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action') || 'revalidate'; // 默认为 revalidate
     const apiKey = searchParams.get('key');
     
-    // 如果设置了 API_KEY 环境变量，则验证请求中的 key
-    const expectedKey = process.env.REBUILD_INDEX_API_KEY;
+    // 验证 API 密钥
+    const expectedKey = process.env.CMS_API_KEY || process.env.REBUILD_API_KEY;
     if (expectedKey && apiKey !== expectedKey) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -88,53 +75,40 @@ export async function GET(request: Request) {
       );
     }
     
-    // 创建搜索索引
-    const searchIndex = await createSearchIndex();
+    // 获取要操作的标签
+    const tagsParam = searchParams.get('tags');
+    const tags = tagsParam ? tagsParam.split(',') : ['prod', 'news', 'case'];
+    
+    // 根据操作类型执行不同的功能
+    let result = {};
+    
+    if (action === 'rebuild-index' || action === 'all') {
+      // 重建搜索索引
+      const searchIndex = await createSearchIndex();
+      result = { ...result, indexRebuilt: true, searchIndex };
+    }
+    
+    if (action === 'revalidate' || action === 'all') {
+      // 重新验证页面
+      for (const tag of tags) {
+        console.log(`Revalidating tag: ${tag}`);
+        revalidateTag(tag);
+      }
+      result = { ...result, revalidated: true, tags };
+    }
     
     return NextResponse.json({
       success: true,
-      message: 'Search index rebuilt successfully'
-    });
-  } catch (error) {
-    console.error('Error in rebuild-index API route:', error);
-    return NextResponse.json(
-      { error: 'Failed to rebuild search index', details: (error as Error).message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    // 验证请求
-    const apiKey = request.headers.get('x-api-key');
-    const validApiKey = process.env.REBUILD_API_KEY;
-    
-    if (!validApiKey || apiKey !== validApiKey) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    
-    // 获取要重建的标签
-    const body = await request.json();
-    const tags = body.tags || ['prod', 'news', 'case'];
-    
-    // 重新验证标签
-    for (const tag of tags) {
-      revalidateTag(tag);
-    }
-    
-    return NextResponse.json({
-      revalidated: true,
-      tags,
+      ...result,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error rebuilding index:', error);
+    console.error('CMS API error:', error);
     return NextResponse.json(
-      { error: 'Failed to rebuild index' },
+      { 
+        error: 'Operation failed', 
+        details: error instanceof Error ? error.message : String(error) 
+      },
       { status: 500 }
     );
   }
