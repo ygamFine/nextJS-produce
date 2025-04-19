@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const response = await fetch(`${apiUrl}/inquiries`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiToken}`,
+        'Authorization': `${apiToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ data: formData }),
