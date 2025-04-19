@@ -1,8 +1,9 @@
-import type { HomePageData, Product, GlobalInfo, MenuItem } from './types';
+import type { HomePageData, Product, GlobalInfo, MenuItem, NewsItem } from './types';
 
-// Strapi API 基础 URL
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL
-const STRAPI_URL_IMG = process.env.NEXT_PUBLIC_STRAPI_API_PROXY
+// 统一 API URL 定义
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || '';
+const STRAPI_URL_IMG = process.env.NEXT_PUBLIC_STRAPI_API_PROXY || '';
+const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN || '';
 
 // 缓存目录
 const CACHE_DIR = process.cwd() + '/.next/cache/data';
@@ -11,52 +12,34 @@ const CACHE_DIR = process.cwd() + '/.next/cache/data';
 const memoryCache: Record<string, { data: any, timestamp: number }> = {};
 
 // 缓存有效期（1小时）
-const CACHE_TTL = 60 * 1000;
-
-// 确保缓存目录存在 - 仅在服务器端执行
-if (typeof window === 'undefined') {
-  // 动态导入
-  import('fs').then(fs => {
-    import('path').then(path => {
-      const fullCachePath = path.join(process.cwd(), '.next/cache/data');
-      if (!fs.existsSync(fullCachePath)) {
-        fs.mkdirSync(fullCachePath, { recursive: true });
-      }
-    });
-  }).catch(err => {
-    console.error('Error importing fs/path modules:', err);
-  });
-}
+const CACHE_TTL = 60 * 60 * 1000;
 
 // 获取 API Token
 const getApiOptions = () => {
-  const token = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
-  
-  if (!token) {
+  if (!API_TOKEN) {
     console.warn("Strapi API Token is not set.");
     return {
       next: { 
         revalidate: 60,
-        tags: [] // 添加空的 tags 数组作为默认值
+        tags: [] 
       }
     };
   }
   
   return {
     headers: { 
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${API_TOKEN}`,
       'Content-Type': 'application/json',
     },
     next: { 
       revalidate: 60,
-      tags: [] // 添加空的 tags 数组作为默认值
+      tags: [] 
     }
   };
 };
 
 // 通用的数据获取函数，支持 SSG 和 ISR
 async function fetchWithCache(url: string, options: any, cacheKey: string) {
-  console.log('cacheKey url：', url)
   // 在客户端，直接获取数据，不使用缓存
   if (typeof window !== 'undefined') {
     try {
@@ -64,9 +47,9 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
       if(options && options.next && typeof options.next === 'object') {
         (options.next as any).tags = [cacheKey];
       }
-      console.log('接口的配置', options)
+      
       const response = await fetch(url, options);
-      console.log('客户端：接口请求返回的数据', response)
+      
       if (!response.ok) {
         throw new Error(`Failed to fetch data from ${url}`);
       }
@@ -78,39 +61,14 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
     }
   }
   
-  // 以下代码只在服务器端执行
-  
-  // 1. 检查内存缓存
+  // 服务器端 - 使用内存缓存
   const now = Date.now();
   if (memoryCache[cacheKey] && (now - memoryCache[cacheKey].timestamp) < CACHE_TTL) {
-    console.log('缓存：接口请求返回的数据', memoryCache[cacheKey].data)
     return memoryCache[cacheKey].data;
   }
   
-  // 2. 检查文件缓存 - 仅在服务器端执行
+  // 从 API 获取数据
   try {
-    // 动态导入 fs 和 path
-    const fs = await import('fs');
-    const path = await import('path');
-    const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
-    
-    if (fs.existsSync(cacheFile)) {
-      const stats = fs.statSync(cacheFile);
-      // 如果缓存文件不超过缓存有效期，使用缓存
-      if ((now - stats.mtimeMs) < CACHE_TTL) {
-        const cachedData = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-        // 更新内存缓存
-        memoryCache[cacheKey] = { data: cachedData, timestamp: now };
-        return cachedData;
-      }
-    }
-  } catch (error) {
-    console.error(`Error with file cache:`, error);
-  }
-  
-  // 3. 从 API 获取数据
-  try {
-    console.log('接口的配置', options)
     const response = await fetch(url, options);
     
     if (!response.ok) {
@@ -118,20 +76,9 @@ async function fetchWithCache(url: string, options: any, cacheKey: string) {
     }
     
     const data = await response.json();
-    console.log('客户端3：接口请求返回的数据', data)
     
-    // // 4. 更新缓存
+    // 更新内存缓存
     memoryCache[cacheKey] = { data, timestamp: now };
-    
-    // 写入文件缓存 - 仅在服务器端执行
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
-      fs.writeFileSync(cacheFile, JSON.stringify(data));
-    } catch (error) {
-      console.error(`Error writing cache file:`, error);
-    }
     
     return data;
   } catch (error) {
@@ -357,8 +304,8 @@ export async function fetchTranslations(locale = 'zh') {
     // 转换为键值对格式
     const translations: Record<string, string> = {};
     data.data?.forEach((item: any) => {
-      if (item.attributes) {
-        translations[item.attributes.key] = item.attributes.value;
+      if (item) {
+        translations[item.key] = item.value;
       } else {
         translations[item.key] = item.value;
       }
@@ -430,31 +377,45 @@ export async function fetchHomePageData(locale = 'zh'): Promise<HomePageData> {
 }
 
 // 获取关于页面数据
-export async function fetchAboutPageData(locale = 'zh') {
+export async function fetchAboutData(locale = 'zh') {
   try {
     const options = getApiOptions();
-    const response = await fetch(`${STRAPI_URL}/about?populate=*&locale=${locale}`, options);
+    const url = `${STRAPI_URL}/about?populate=*&locale=${locale}`;
+    
+    const response = await fetch(url, options);
     
     if (!response.ok) {
-      throw new Error('Failed to fetch about page data');
+      throw new Error('Failed to fetch about data');
     }
     
     const data = await response.json();
     
-    if (!data.data) {
-      return null;
+    // 确保内容是字符串
+    let content = '';
+    if (data.data && data.data.attributes && typeof data.data.attributes.content === 'string') {
+      content = data.data.attributes.content;
+    } else if (data.data && data.data.attributes && data.data.attributes.content) {
+      try {
+        content = JSON.stringify(data.data.attributes.content);
+      } catch (e) {
+        content = '';
+      }
     }
     
     return {
-      title: data.data.attributes.title,
-      content: data.data.attributes.content,
-      image: data.data.attributes.image?.data?.attributes?.url 
+      title: data.data?.attributes?.title || '',
+      content: content,
+      image: data.data?.attributes?.image?.data?.attributes?.url
         ? `${STRAPI_URL_IMG}${data.data.attributes.image.data.attributes.url}`
         : '/placeholder.jpg'
     };
   } catch (error) {
-    console.error('Error fetching about page data:', error);
-    return null;
+    console.error('Error fetching about data:', error);
+    return {
+      title: '',
+      content: '',
+      image: '/placeholder.jpg'
+    };
   }
 }
 
@@ -471,9 +432,9 @@ export async function fetchContactPageData(locale = 'zh') {
     const data = await response.json();
     
     return {
-      title: data.data?.attributes.title || '',
-      content: data.data?.attributes.content || '',
-      contactInfo: data.data?.attributes.contactInfo || {
+      title: data.data?.title || '',
+      content: data.data?.content || '',
+      contactInfo: data.data?.contactInfo || {
         address: '',
         phone: '',
         email: ''
@@ -494,27 +455,81 @@ export async function fetchContactPageData(locale = 'zh') {
 }
 
 // 获取新闻列表
-export async function fetchNewsItems(locale = 'zh') {
+export async function fetchNewsItems(locale = 'zh', page = 1, pageSize = 10) {
   try {
     const options = getApiOptions();
-    const response = await fetch(`${STRAPI_URL}/news?populate=*&locale=${locale}`, options);
+    const url = `${STRAPI_URL}/articles?populate=*&locale=${locale}&pagination[page]=${page}&pagination[pageSize]=${pageSize}`;
+    
+    const response = await fetch(url, options);
     
     if (!response.ok) {
-      throw new Error('Failed to fetch news items');
+      throw new Error(`Failed to fetch news items`);
     }
     
     const data = await response.json();
     
-    return data.data?.map((item: any) => ({
-      id: item.id,
-      title: item.attributes.title,
-      summary: item.attributes.summary,
-      content: item.attributes.content,
-      date: item.attributes.publishDate,
-      image: item.attributes.image?.data?.attributes?.url 
-        ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
-        : '/placeholder.jpg'
-    })) || [];
+    // 处理不同的响应结构
+    let articles = [];
+    
+    if (data && data.data && Array.isArray(data.data)) {
+      // 标准 Strapi v4 响应
+      articles = data.data.map((item: any) => {
+        // 确保内容是字符串
+        let content = '';
+        if (typeof item.description === 'string') {
+          content = item.description;
+        } else if (item.description) {
+          try {
+            content = JSON.stringify(item.description);
+          } catch (e) {
+            content = '';
+          }
+        }
+        
+        return {
+          id: item.documentId || item.id,
+          title: item.title || '',
+          summary: item.title || '',
+          content: content,
+          date: item.createdAt || item.date,
+          author: item.author?.name || '',
+          image: item.cover?.url 
+            ? `${STRAPI_URL_IMG}${item.cover.url}`
+            : '/placeholder-news.jpg',
+          slug: item.slug || item.documentId || item.id
+        };
+      });
+    } else if (Array.isArray(data)) {
+      // 直接数组响应
+      articles = data.map((item: any) => {
+        // 确保内容是字符串
+        let content = '';
+        if (typeof item.description === 'string') {
+          content = item.description;
+        } else if (item.description) {
+          try {
+            content = JSON.stringify(item.description);
+          } catch (e) {
+            content = '';
+          }
+        }
+        
+        return {
+          id: item.documentId || item.id,
+          title: item.title || '',
+          summary: item.title || '',
+          content: content,
+          date: item.createdAt || item.date,
+          author: item.author?.name || '',
+          image: item.cover?.url 
+            ? `${STRAPI_URL_IMG}${item.cover.url}`
+            : '/placeholder-news.jpg',
+          slug: item.slug || item.documentId || item.id
+        };
+      });
+    }
+    
+    return articles;
   } catch (error) {
     console.error('Error fetching news items:', error);
     return [];
@@ -522,60 +537,134 @@ export async function fetchNewsItems(locale = 'zh') {
 }
 
 // 获取单个新闻详情
-export async function fetchNewsById(id: string, locale = 'zh') {
+export async function fetchNewsItemById(locale = 'zh', id: string) {
   try {
     const options = getApiOptions();
-    const response = await fetch(`${STRAPI_URL}/news/${id}?populate=*&locale=${locale}`, options);
+    const url = `${STRAPI_URL}/articles/${id}?populate=*&locale=${locale}`;
+    
+    const response = await fetch(url, options);
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch news with id ${id}`);
+      throw new Error(`Failed to fetch news item with ID ${id}`);
     }
     
     const data = await response.json();
-    const item = data.data;
     
-    return {
-      id: item.id,
-      title: item.attributes.title,
-      summary: item.attributes.summary,
-      content: item.attributes.content,
-      date: item.attributes.publishDate,
-      image: item.attributes.image?.data?.attributes?.url 
-        ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
-        : '/placeholder.jpg'
-    };
+    if (!data) {
+      throw new Error(`News item with ID ${id} not found`);
+    }
+    
+    // 处理不同的响应结构
+    let newsItem;
+    
+    if (data.data && data.data.id) {
+      // 确保内容是字符串
+      let content = '';
+      if (typeof data.data.description === 'string') {
+        content = data.data.description;
+      } else if (data.data.description) {
+        try {
+          content = JSON.stringify(data.data.description);
+        } catch (e) {
+          content = '';
+        }
+      }
+      
+      newsItem = {
+        id: data.data.id,
+        title: data.data.title || '',
+        summary: data.data.title || '',
+        content: content,
+        date: data.data.createdAt,
+        author: data.data.author?.name || '',
+        image: data.data.cover?.url 
+          ? `${STRAPI_URL_IMG}${data.data.cover.url}`
+          : '/placeholder-news.jpg',
+        slug: data.data.slug || data.data.id
+      };
+    } else if (data.id) {
+      // 确保内容是字符串
+      let content = '';
+      if (typeof data.description === 'string') {
+        content = data.description;
+      } else if (data.description) {
+        try {
+          content = JSON.stringify(data.description);
+        } catch (e) {
+          content = '';
+        }
+      }
+      
+      newsItem = {
+        id: data.id,
+        title: data.title || '',
+        summary: data.title || '',
+        content: content,
+        date: data.createdAt,
+        author: data.author?.name || '',
+        image: data.cover?.url 
+          ? `${STRAPI_URL_IMG}${data.cover.url}`
+          : '/placeholder-news.jpg',
+        slug: data.slug || data.id
+      };
+    } else {
+      throw new Error(`Unexpected data structure for news item with ID ${id}`);
+    }
+    
+    return newsItem;
   } catch (error) {
-    console.error(`Error fetching news ${id}:`, error);
+    console.error(`Error fetching news item with ID ${id}:`, error);
     return null;
   }
 }
 
-/**
- * 获取支持的语言列表
- */
-export async function fetchSupportedLocales(): Promise<Array<{code: string, name: string}>> {
+// 获取相关新闻
+export async function fetchRelatedNews(locale = 'zh', currentId: string, limit = 3) {
   try {
-    const response = await fetch(`${STRAPI_URL}/i18n/locales`);
+    const allNews = await fetchNewsItems(locale, 1, 20);
+    
+    // 过滤掉当前新闻
+    const filteredNews = allNews.filter(item => item.id.toString() !== currentId.toString());
+    
+    // 如果没有足够的新闻，直接返回所有过滤后的新闻
+    if (filteredNews.length <= limit) {
+      return filteredNews;
+    }
+    
+    // 随机选择指定数量的相关新闻
+    const shuffled = filteredNews.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, limit);
+  } catch (error) {
+    console.error('Error fetching related news:', error);
+    return [];
+  }
+}
+
+// 获取支持的语言列表
+export async function fetchSupportedLocales() {
+  try {
+    const options = getApiOptions();
+    const url = `${STRAPI_URL}/i18n/locales`;
+    
+    const response = await fetch(url, options);
     
     if (!response.ok) {
-      console.error('Failed to fetch supported locales');
-      return [
-        { code: 'zh', name: '中文' },
-        { code: 'en', name: 'English' }
-      ]; // 默认语言作为后备
+      throw new Error('Failed to fetch supported locales');
     }
     
     const data = await response.json();
+    
     return data.map((locale: any) => ({
       code: locale.code,
       name: locale.name
     }));
   } catch (error) {
     console.error('Error fetching supported locales:', error);
+    // 返回默认语言列表
     return [
       { code: 'zh', name: '中文' },
       { code: 'en', name: 'English' }
-    ]; // 默认语言作为后备
+    ];
   }
 }
 
@@ -596,7 +685,7 @@ export async function fetchContactInfo(locale = 'zh') {
       return getDefaultContactInfo(locale);
     }
     
-    const contactData = data.data.attributes || data.data;
+    const contactData = data.data || data.data;
     
     return {
       address: contactData.address || '',
@@ -622,11 +711,6 @@ function getDefaultContactInfo(locale = 'zh') {
   };
 }
 
-// 获取单个新闻详情 (重命名函数以匹配导入)
-export async function fetchNewsItemById(locale = 'zh', id: string) {
-  return fetchNewsById(id, locale);
-}
-
 // 获取案例详情
 export async function fetchCaseById(locale = 'zh', id: string) {
   try {
@@ -642,12 +726,12 @@ export async function fetchCaseById(locale = 'zh', id: string) {
     
     return {
       id: item.id,
-      title: item.attributes.title,
-      summary: item.attributes.summary,
-      content: item.attributes.content,
-      date: item.attributes.publishDate,
-      image: item.attributes.image?.data?.attributes?.url 
-        ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
+      title: item.title,
+      summary: item.summary,
+      content: item.content,
+      date: item.publishDate,
+      image: item.image?.data?.url 
+        ? `${STRAPI_URL_IMG}${item.image.data.url}`
         : '/placeholder.jpg'
     };
   } catch (error) {
@@ -670,12 +754,12 @@ export async function fetchCases(locale = 'zh') {
     
     return data.data?.map((item: any) => ({
       id: item.id,
-      title: item.attributes.title,
-      summary: item.attributes.summary,
-      content: item.attributes.content,
-      date: item.attributes.publishDate,
-      image: item.attributes.image?.data?.attributes?.url 
-        ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
+      title: item.title,
+      summary: item.summary,
+      content: item.content,
+      date: item.publishDate,
+      image: item.image?.data?.url 
+        ? `${STRAPI_URL_IMG}${item.image.data.url}`
         : '/placeholder.jpg'
     })) || [];
   } catch (error) {
@@ -683,10 +767,6 @@ export async function fetchCases(locale = 'zh') {
     return [];
   }
 }
-
-// API 基础 URL
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337/api';
-const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
 
 // 通用 API 请求函数
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {
@@ -711,9 +791,9 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
     },
   };
 
-  console.log(`Sending request to: ${API_URL}${endpoint}`);
+  console.log(`Sending request to: ${STRAPI_URL}${endpoint}`);
   
-  const response = await fetch(`${API_URL}${endpoint}`, mergedOptions);
+  const response = await fetch(`${STRAPI_URL}${endpoint}`, mergedOptions);
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => 'Unknown error');
@@ -728,24 +808,14 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
 export async function submitInquiry(formData: any) {
   console.log('Submitting inquiry:', formData);
   
-  // 确保 API_URL 已经包含 /api 前缀
+  // 使用 STRAPI_URL 而不是 API_URL
   const endpoint = '/inquiries';
   
-  // 添加更多调试信息
-  console.log(`Full request URL: ${API_URL}${endpoint}`);
-  console.log('Request body:', JSON.stringify({
-    data: {
-      name: formData.name,
-      email: formData.email,
-      message: formData.message,
-    }
-  }));
-  
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(`${STRAPI_URL}${endpoint}`, {
       method: 'POST',
       headers: {
-        'Authorization': `${API_TOKEN}`,
+        'Authorization': `Bearer ${API_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -756,10 +826,6 @@ export async function submitInquiry(formData: any) {
         }
       }),
     });
-    
-    // 详细记录响应信息
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -789,8 +855,8 @@ export async function fetchInternalLinkKeywords(locale = 'zh') {
     console.log('关键词数据',data)
     // if (data && data.data) {
     //   data.data.keys.forEach((item: any) => {
-    //     const keyword = item.keyword || item.attributes?.keyword;
-    //     const targetProductId = item.targetProductId || item.attributes?.targetProductId;
+    //     const keyword = item.keyword || item?.keyword;
+    //     const targetProductId = item.targetProductId || item?.targetProductId;
         
     //     if (keyword && targetProductId) {
     //       keywordsMap[keyword] = targetProductId.toString();
@@ -843,4 +909,7 @@ export function processInternalLinks(
   }
   
   return result;
-} 
+}
+
+// 导出其他必要的函数
+export { getApiOptions }; 

@@ -1,8 +1,9 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { fetchHomePageData, fetchGlobalInfo, fetchSupportedLocales, fetchProducts } from '@/lib/api'
+import { fetchHomePageData, fetchGlobalInfo, fetchSupportedLocales, fetchProducts, fetchNewsItems } from '@/lib/api'
 import { BannerCarouselClient } from '@/components/BannerCarouselClient'
 import { OptimizedImage } from '@/components/OptimizedImage'
+import { formatDate } from '@/lib/utils'
 
 // 生成元数据
 export async function generateMetadata({ params }: any): Promise<Metadata> {
@@ -33,6 +34,8 @@ export default async function HomePage({ params }: any ) {
   // 获取产品列表，限制为6个
   const allProducts = await fetchProducts(locale);
   const featuredProducts = allProducts.slice(0, 6);
+  
+  const latestNews = await fetchNewsItems(locale, 1, 3);
   
   return (
     <main>
@@ -124,23 +127,56 @@ export default async function HomePage({ params }: any ) {
       )}
       
       {/* 最新新闻部分 */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            {params.locale === 'en' ? 'Latest News' : '最新动态'}
-          </h2>
-          
-          {/* 这里可以添加新闻列表，类似产品列表的实现 */}
-          
-          <div className="text-center mt-8">
-            <Link href={`/${params.locale}/news`}>
-              <span className="inline-block border border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white font-medium py-2 px-6 rounded-md transition">
-                {params.locale === 'en' ? 'View All News' : '查看全部新闻'}
-              </span>
-            </Link>
+      {latestNews.length > 0 && (
+        <section className="py-12 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-8 text-center">
+              {locale === 'en' ? 'Latest News' : '最新动态'}
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {latestNews.map(news => (
+                <div key={news.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <Link href={`/${locale}/news/${news.id}`}>
+                    <div className="relative h-48">
+                      <OptimizedImage
+                        src={news.image}
+                        alt={news.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </Link>
+                  <div className="p-4">
+                    <p className="text-gray-500 text-sm mb-2">
+                      {news.date && formatDate(news.date, locale)}
+                    </p>
+                    <Link href={`/${locale}/news/${news.id}`}>
+                      <h3 className="text-xl font-semibold mb-2 hover:text-indigo-600 transition-colors">
+                        {news.title}
+                      </h3>
+                    </Link>
+                    {news.summary && (
+                      <p className="text-gray-600 line-clamp-3">
+                        {news.summary}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="text-center mt-8">
+              <Link 
+                href={`/${locale}/news`}
+                className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+              >
+                {locale === 'en' ? 'View All News' : '查看全部新闻'}
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   )
 }

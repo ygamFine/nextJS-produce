@@ -127,25 +127,29 @@ async function downloadProductImages() {
  */
 async function downloadNewsImages() {
   console.log('Downloading news images...');
-  const locales = ['zh', 'en', 'ja', 'asa'];
   
-  for (const locale of locales) {
-    console.log(`Fetching news for locale: ${locale}`);
-    try {
-      const newsItems = await fetchNewsItems(locale);
-      console.log(`Found ${newsItems.length} news items for locale: ${locale}`);
-      
-      for (const item of newsItems) {
-        if (item.image && !downloadedImages.has(item.image)) {
-          const localPath = await downloadImage(item.image);
-          downloadedImages.add(item.image);
-          console.log(`News image downloaded: ${item.image} -> ${localPath}`);
-        }
+  // 获取所有新闻
+  const newsItems = await fetchNewsItems('zh', 1, 100);
+  
+  // 提取图片 URL
+  const imageUrls = newsItems
+    .map(item => item.image)
+    .filter(url => url && !url.startsWith('/placeholder'));
+  
+  // 下载图片
+  for (const url of imageUrls) {
+    if (!downloadedImages.has(url)) {
+      try {
+        const localPath = await downloadImage(url);
+        downloadedImages.add(url);
+        console.log(`News image downloaded: ${url} -> ${localPath}`);
+      } catch (error) {
+        console.error(`Error downloading image ${url}:`, error);
       }
-    } catch (error) {
-      console.error(`Error downloading news images for ${locale}:`, error);
     }
   }
+  
+  console.log(`Downloaded ${imageUrls.length} news images`);
 }
 
 /**

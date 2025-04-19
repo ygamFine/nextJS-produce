@@ -68,10 +68,22 @@ export interface GlobalInfo {
   };
 }
 
-// 添加或更新以下类型定义
+// 修改 LocalePageProps 类型
 export type LocalePageProps = {
   params: {
     locale: string;
   };
   searchParams?: Record<string, string | string[] | undefined>;
-}; 
+};
+
+// 修改 NewsItem 类型
+export interface NewsItem {
+  id: string;
+  title: string;
+  summary?: string;
+  content: string;
+  date?: string;
+  author?: string;
+  image: string;
+  slug?: string;
+} 

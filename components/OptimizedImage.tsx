@@ -25,7 +25,7 @@ export function OptimizedImage({
   sizes = '100vw',
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+  const [isError, setIsError] = useState(false);
   
   // 处理图片加载完成
   const handleImageLoad = () => {
@@ -35,23 +35,23 @@ export function OptimizedImage({
   // 处理图片加载错误
   const handleImageError = () => {
     setIsLoading(false);
-    setHasError(true);
+    setIsError(true);
     console.error(`Failed to load image: ${src}`);
   };
   
   // 处理图片 URL
-  const imageSrc = hasError ? '/placeholder.jpg' : (src || '/placeholder.jpg');
+  const imgSrc = (!src || isError) ? '/placeholder-news.jpg' : src;
   
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`relative overflow-hidden ${className} h-full`}>
       {isLoading && (
         <div className="absolute inset-0 bg-gray-200 animate-pulse" />
       )}
       
       {fill ? (
         <Image
-          src={imageSrc}
-          alt={alt}
+          src={imgSrc}
+          alt={alt || ''}
           fill
           sizes={sizes}
           priority={priority}
@@ -63,8 +63,8 @@ export function OptimizedImage({
         />
       ) : (
         <Image
-          src={imageSrc}
-          alt={alt}
+          src={imgSrc}
+          alt={alt || ''}
           width={width || 800}
           height={height || 600}
           priority={priority}

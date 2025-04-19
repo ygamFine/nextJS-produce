@@ -6,7 +6,7 @@ const https = require('https');
 
 // 基础 URL 配置
 const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://127.0.0.1:1337/api';
-const STRAPI_URL_IMG = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://127.0.0.1:1337';
+const STRAPI_URL_IMG = process.env.NEXT_PUBLIC_STRAPI_API_PROXY || 'http://127.0.0.1:1337';
 
 // 获取产品列表
 async function fetchProducts(locale = 'zh') {
@@ -31,22 +31,40 @@ async function fetchProducts(locale = 'zh') {
 }
 
 // 获取新闻列表
-async function fetchNewsItems(locale = 'zh') {
+async function fetchNewsItems(locale = 'zh', page = 1, pageSize = 10) {
   try {
-    const url = `${STRAPI_URL}/news-items?populate=*&sort=publishDate:desc&locale=${locale}`;
+    const url = `${STRAPI_URL}/articles?populate=*&locale=${locale}&pagination[page]=${page}&pagination[pageSize]=${pageSize}`;
     const data = await fetchJson(url);
     
-    return data.data?.map((item) => ({
-      id: item.id,
-      title: item.attributes.title,
-      content: item.attributes.content,
-      date: item.attributes.publishDate,
-      image: item.attributes.image?.data?.attributes?.url 
-        ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
-        : '/placeholder.jpg'
-    })) || [];
+    // 转换 Strapi 响应格式为应用所需格式
+    return (data.data || []).map((item) => {
+      // 确保内容是字符串
+      let content = '';
+      if (typeof item.description === 'string') {
+        content = item.description;
+      } else if (item.description) {
+        try {
+          content = JSON.stringify(item.description);
+        } catch (e) {
+          content = '';
+        }
+      }
+      
+      return {
+        id: item.documentId || item.id,
+        title: item.title || '',
+        summary: item.title || '',
+        content: content,
+        date: item.createdAt || item.date,
+        author: item.author?.name || '',
+        image: item.cover?.url 
+          ? formatImageUrl(item.cover.url)
+          : '/placeholder-news.jpg',
+        slug: item.slug || item.documentId || item.id
+      };
+    });
   } catch (error) {
-    console.error('Error fetching news:', error);
+    console.error('Error fetching news items:', error);
     return [];
   }
 }
@@ -54,21 +72,42 @@ async function fetchNewsItems(locale = 'zh') {
 // 获取案例列表
 async function fetchCases(locale = 'zh') {
   try {
-    const url = `${STRAPI_URL}/cases?populate=*&sort=publishDate:desc&locale=${locale}`;
+    const url = `${STRAPI_URL}/cases?populate=*&sort=createdAt:desc&locale=${locale}`;
     const data = await fetchJson(url);
     
     return data.data?.map((item) => ({
       id: item.id,
       title: item.attributes.title,
-      content: item.attributes.content,
-      date: item.attributes.publishDate,
+      description: item.attributes.description,
       image: item.attributes.image?.data?.attributes?.url 
         ? `${STRAPI_URL_IMG}${item.attributes.image.data.attributes.url}`
-        : '/placeholder.jpg'
+        : '/placeholder.jpg',
+      client: item.attributes.client,
+      date: item.attributes.date
     })) || [];
   } catch (error) {
     console.error('Error fetching cases:', error);
     return [];
+  }
+}
+
+// 获取支持的语言列表
+async function fetchSupportedLocales() {
+  try {
+    const url = `${STRAPI_URL}/i18n/locales`;
+    const data = await fetchJson(url);
+    
+    return data.map((locale) => ({
+      code: locale.code,
+      name: locale.name
+    }));
+  } catch (error) {
+    console.error('Error fetching supported locales:', error);
+    // 返回默认语言列表
+    return [
+      { code: 'zh', name: '中文' },
+      { code: 'en', name: 'English' }
+    ];
   }
 }
 
@@ -120,5 +159,6 @@ module.exports = {
   fetchProducts,
   fetchNewsItems,
   fetchCases,
+  fetchSupportedLocales,
   formatImageUrl
 }; 
