@@ -458,6 +458,7 @@ export async function fetchContactPageData(locale = 'zh') {
 export async function fetchNewsItems(locale = 'zh', page = 1, pageSize = 10) {
   try {
     const options = getApiOptions();
+    options.next.tags = ['news'];
     const url = `${STRAPI_URL}/articles?populate=*&locale=${locale}&pagination[page]=${page}&pagination[pageSize]=${pageSize}`;
     
     const response = await fetch(url, options);
