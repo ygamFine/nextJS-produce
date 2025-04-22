@@ -646,14 +646,17 @@ export async function fetchSupportedLocales() {
   try {
     const options = getApiOptions();
     const url = `${STRAPI_URL}/i18n/locales`;
+    console.log('api 649 url',url)
     
     const response = await fetch(url, options);
+    console.log('api 652 response',response)
     
     if (!response.ok) {
       throw new Error('Failed to fetch supported locales');
     }
     
     const data = await response.json();
+    console.log('api 660 data',data)
     
     return data.map((locale: any) => ({
       code: locale.code,
