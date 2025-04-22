@@ -61,3 +61,14 @@ body {
 option{
   color: #fff !important;
 }
+
+/* RTL 支持 */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+/* 为阿拉伯语添加特定字体支持 */
+html[lang="ar"] body {
+  font-family: 'Amiri', 'Noto Sans Arabic', sans-serif, Arial, Helvetica;
+}

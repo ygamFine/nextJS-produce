@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { OptimizedImage } from './OptimizedImage';
+import { formatPrice } from '@/lib/utils';
 
 interface Product {
   id: string;
@@ -18,6 +19,9 @@ interface ClientPaginationProps {
   products: Product[];
   locale: string;
 }
+
+// RTL 语言列表
+const rtlLocales = ['ar']; // 阿拉伯语是从右到左的语言
 
 export function ClientPagination({ products, locale }: ClientPaginationProps) {
   const router = useRouter();
@@ -94,6 +98,9 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
     return Array.from(new Set(pages)).sort((a, b) => Math.abs(a) - Math.abs(b));
   };
   
+  // 确定是否是 RTL 语言
+  const isRTL = rtlLocales.includes(locale);
+  
   return (
     <div>
       {/* 页面大小选择器 */}
@@ -120,7 +127,7 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
       
       {/* 产品列表 */}
       {currentProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ${isRTL ? 'rtl' : ''}`}>
           {currentProducts.map(product => (
             <Link 
               href={`/${locale}/products/${product.id}`} 
@@ -144,7 +151,7 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
                     {product.description}
                   </p>
                   <p className="text-lg font-bold text-indigo-600">
-                    ¥{product.price.toFixed(2)}
+                    {formatPrice(product.price, locale)}
                   </p>
                 </div>
               </div>
@@ -161,7 +168,7 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
       
       {/* 分页控件 */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-1 mt-8">
+        <div className={`flex justify-center items-center space-x-1 mt-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {/* 上一页按钮 */}
           <button
             onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
@@ -172,7 +179,7 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
                 : 'hover:bg-gray-50'
             }`}
           >
-            {locale === 'en' ? 'Previous' : '上一页'}
+            {isRTL ? '→' : '←'}
           </button>
           
           {/* 页码 */}
@@ -211,7 +218,7 @@ export function ClientPagination({ products, locale }: ClientPaginationProps) {
                 : 'hover:bg-gray-50'
             }`}
           >
-            {locale === 'en' ? 'Next' : '下一页'}
+            {isRTL ? '←' : '→'}
           </button>
         </div>
       )}

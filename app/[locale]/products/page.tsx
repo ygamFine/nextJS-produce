@@ -2,6 +2,9 @@ import { Metadata } from 'next';
 import { fetchProducts, fetchSupportedLocales } from '@/lib/api';
 import { ClientPagination } from '@/components/ClientPagination';
 
+// RTL 语言列表
+const rtlLocales = ['ar']; // 阿拉伯语是从右到左的语言
+
 // 生成元数据
 export async function generateMetadata({ params }: any): Promise<Metadata> {
   const { locale } = params;
@@ -27,8 +30,11 @@ export default async function ProductsPage({ params }: any) {
   // 一次性获取所有产品
   const allProducts = await fetchProducts(locale);
   
+  // 确定是否是 RTL 语言
+  const isRTL = rtlLocales.includes(locale);
+  
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className={`container mx-auto px-4 py-12 ${isRTL ? 'rtl' : ''}`}>
       <h1 className="text-3xl font-bold mb-8 text-center">
         {locale === 'en' ? 'Our Products' : '我们的产品'}
       </h1>

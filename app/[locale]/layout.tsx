@@ -9,6 +9,9 @@ import { LocaleProvider } from '@/contexts/LocaleContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
+// RTL 语言列表
+const rtlLocales = ['ar']; // 阿拉伯语是从右到左的语言
+
 export const metadata = {
   title: '企业网站模板',
   description: '使用 Next.js 和 Tailwind CSS 构建的企业网站模板',
@@ -80,8 +83,11 @@ export default async function LocaleLayout({
       ];
     }
     
+    // 确定文档方向 - 为阿拉伯语设置 RTL
+    const dir = rtlLocales.includes(locale) ? 'rtl' : 'ltr';
+    
     return (
-      <html lang={params.locale}>
+      <html lang={params.locale} dir={dir}>
         <body className={inter.className}>
           <LocaleProvider 
             initialLocale={locale} 
