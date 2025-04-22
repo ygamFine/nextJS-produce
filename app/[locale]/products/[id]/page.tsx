@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
 export async function generateStaticParams() {
   try {
     // 获取所有支持的语言的所有产品
-    const locales = ['zh', 'en', 'ja', 'asa'];
+    const locales = ['zh', 'en', 'ja', 'asa', 'ar', 'my'];
     const params = [];
     
     for (const locale of locales) {

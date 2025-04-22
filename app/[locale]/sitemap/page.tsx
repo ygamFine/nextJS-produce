@@ -157,6 +157,20 @@ export default async function SitemapPage({ params }: any) {
                 </Link>
               </li>
             )}
+            {locale !== 'ar' && (
+              <li>
+                <Link href="/ar/sitemap" className="text-indigo-600 hover:underline">
+                  Arabic Sitemap
+                </Link>
+              </li> 
+            )}
+            {locale !== 'my' && (
+              <li>
+                <Link href="/my/sitemap" className="text-indigo-600 hover:underline">
+                  Malay Sitemap
+                </Link> 
+              </li>
+            )}
           </ul>
         </div>
       </div>

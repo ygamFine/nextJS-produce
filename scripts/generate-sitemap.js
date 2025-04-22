@@ -3,7 +3,7 @@ const path = require('path');
 const { fetchProducts, fetchNewsItems, fetchCases } = require('./api-adapter');
 
 // 支持的语言列表
-const SUPPORTED_LOCALES = ['zh', 'en', 'ja', 'asa'];
+const SUPPORTED_LOCALES = ['zh', 'en', 'ja', 'asa', 'ar', 'my'];
 
 // 网站基础 URL - 确保这里使用正确的生产环境 URL
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';

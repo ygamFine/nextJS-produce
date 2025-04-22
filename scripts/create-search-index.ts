@@ -8,7 +8,7 @@ async function createSearchIndex() {
     console.log('Creating search index...');
     
     // 获取所有语言
-    const locales = ['zh', 'en', 'ja', 'asa'];
+    const locales = ['zh', 'en', 'ja', 'asa', 'ar', 'my'];
     
     // 为每种语言创建索引
     for (const locale of locales) {
@@ -94,7 +94,7 @@ async function createSearchIndex() {
     }
     
     // 为每种语言创建空索引
-    const locales = ['zh', 'en', 'ja', 'asa'];
+    const locales = ['zh', 'en', 'ja', 'asa', 'ar', 'my'];
     for (const locale of locales) {
       fs.writeFileSync(
         path.join(publicDir, `index-${locale}.json`),

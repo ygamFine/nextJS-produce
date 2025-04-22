@@ -101,7 +101,7 @@ async function downloadImage(url) {
  */
 async function downloadProductImages() {
   console.log('Downloading product images...');
-  const locales = ['zh', 'en', 'ja', 'asa'];
+  const locales = ['zh', 'en', 'ja', 'asa', 'ar', 'my'];
   
   for (const locale of locales) {
     console.log(`Fetching products for locale: ${locale}`);
@@ -157,7 +157,7 @@ async function downloadNewsImages() {
  */
 async function downloadCaseImages() {
   console.log('Downloading case images...');
-  const locales = ['zh', 'en', 'ja', 'asa'];
+  const locales = ['zh', 'en', 'ja', 'asa', 'ar', 'my'];
   
   for (const locale of locales) {
     console.log(`Fetching cases for locale: ${locale}`);

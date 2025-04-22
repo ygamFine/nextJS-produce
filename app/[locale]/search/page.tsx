@@ -21,7 +21,9 @@ export function generateStaticParams() {
     { locale: 'en' },
     { locale: 'zh' },
     { locale: 'ja' },
-    { locale: 'asa' }
+    { locale: 'asa' },
+    { locale: 'ar' },
+    { locale: 'my' }
   ];
 }
 
