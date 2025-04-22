@@ -72,7 +72,7 @@ export default async function LocaleLayout({
     try {
       supportedLocales = await fetchSupportedLocales();
     } catch (error) {
-      console.error('Error fetching supported locales:', error);
+      console.error('layout 75 Error fetching supported locales:', error);
       // 使用默认语言列表
       supportedLocales = [
         { code: 'zh', name: '中文' },

@@ -102,7 +102,7 @@ async function fetchSupportedLocales() {
       name: locale.name
     }));
   } catch (error) {
-    console.error('Error fetching supported locales:', error);
+    console.error('api-adapter 100 Error fetching supported locales:', error);
     // 返回默认语言列表
     return [
       { code: 'zh', name: '中文' },
