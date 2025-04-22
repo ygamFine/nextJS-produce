@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // 支持的语言列表
-const supportedLocales = ['zh', 'en', 'ja', 'asa'] // 确保包含所有支持的语言
+const supportedLocales = ['zh', 'en', 'ja', 'asa', 'ar', 'my'] // 确保包含所有支持的语言
 // 默认语言
 const defaultLocale = 'zh'
 
